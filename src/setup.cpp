@@ -6,32 +6,11 @@
 #include "porting.h"
 
 WiFiManager wm;
-bool WMISBLOCKING = true; // use blocking or non blocking mode, non global params wont work in non blocking
 
 #define SETUP_TIME_SEC 600
 
 // #define CALLBACK_NEED
 #ifdef CALLBACK_NEED
-void saveWifiCallback(){
-  rlog_i("info", "[CALLBACK] saveWiFiCallback fired");
-}
-
-//gets called when WiFiManager enters configuration mode
-void configModeCallback (WiFiManager *myWiFiManager) {
-  rlog_i("info", "[CALLBACK] configModeCallback fired");
-  // myWiFiManager->setAPStaticIPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0)); 
-  // rlog_i("info", WiFi.softAPIP());
-  //if you used auto generated SSID, print it
-  // rlog_i("info", myWiFiManager->getConfigPortalSSID());
-  // 
-  // esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_BW_HT20);
-}
-
-void saveParamCallback(){
-  rlog_i("info", "[CALLBACK] saveParamCallback fired");
-  // wm.stopConfigPortal();
-}
-
 void handleRoute(){
   rlog_i("info", "[HTTP] handle route");
   wm.server->send(200, "text/plain", "hello from user code");
@@ -42,21 +21,16 @@ void bindServerCallback(){
   // wm.server->on("/info",handleRoute); // you can override wm!
 }
 
-void handlePreOtaUpdateCallback(){
-  Update.onProgress([](unsigned int progress, unsigned int total) {
-    rlog_i("info", "CUSTOM Progress: %u%%\r", (progress / (total / 100)));
-  });
-}
 #endif
 
 void wifiInfo() {
   // can contain gargbage on esp32 if wifi is not ready yet
-  rlog_i("info", "[WIFI] WIFI INFO DEBUG");
+  rlog_i("info", "[wifiInfo] WIFI INFO DEBUG");
   // WiFi.printDiag(Serial);
-  rlog_i("info", "[WIFI] SAVED: %s", (String)(wm.getWiFiIsSaved() ? "YES" : "NO"));
-  rlog_i("info", "[WIFI] SSID: %s", (String)wm.getWiFiSSID());
-  rlog_i("info", "[WIFI] PASS: %s", (String)wm.getWiFiPass());
-  rlog_i("info", "[WIFI] HOSTNAME: %s", (String)WiFi.getHostname());
+  rlog_i("info", "[wifiInfo] SAVED: %s", (String)(wm.getWiFiIsSaved() ? "YES" : "NO"));
+  rlog_i("info", "[wifiInfo] SSID: %s", (String)wm.getWiFiSSID());
+  rlog_i("info", "[wifiInfo] PASS: %s", (String)wm.getWiFiPass());
+  rlog_i("info", "[wifiInfo] HOSTNAME: %s", (String)WiFi.getHostname());
 }
 
 void startAP(Config &conf) {
@@ -71,12 +45,7 @@ void startAP(Config &conf) {
 #endif
 
 #ifdef CALLBACK_NEED
-  // callbacks
-  wm.setAPCallback(configModeCallback);
   wm.setWebServerCallback(bindServerCallback);
-  wm.setSaveConfigCallback(saveWifiCallback);
-  wm.setSaveParamsCallback(saveParamCallback);
-  wm.setPreOtaUpdateCallback(handlePreOtaUpdateCallback);
 #endif  
   // std::vector<const char *> menu = {"wifi","info","param","sep","restart","exit"};
   std::vector<const char *> menu = {};
@@ -97,52 +66,34 @@ void startAP(Config &conf) {
   WiFiManagerParameter subtitle_energy("<h3>Электроэнергия</h3>");
   wm.addParameter(&subtitle_energy);
 
-  WiFiManagerParameter label_counter("<label class='label'>Показания счетчика, кВт*ч:</label>");
-  wm.addParameter(&label_counter);
-  FloatParameter param_counter_t0("counter_t0", "", conf.counter_t0);
+  FloatParameter param_counter_t0("counter_t0", "Показания счетчика, кВт*ч:", conf.counter_t0);
   wm.addParameter(&param_counter_t0);
 
-  WiFiManagerParameter label_coeff("<label class='label'>Коэффициент счетчика, имп./кВт*ч:</label>");
-  wm.addParameter(&label_coeff);
-  LongParameter param_coeff("coeff", "", conf.coeff);
+  LongParameter param_coeff("coeff", "Коэффициент счетчика, имп./кВт*ч:", conf.coeff);
   wm.addParameter(&param_coeff);
-
-  WiFiManagerParameter label_send_period("<label class='label'>Период отправки показаний, мин.:</label>");
-  wm.addParameter(&label_send_period);
-  LongParameter param_send_period("send_period", "", conf.send_period);
-  wm.addParameter(&param_send_period);
 
   WiFiManagerParameter subtitle_mqtt("<h3>MQTT</h3>");
   wm.addParameter(&subtitle_mqtt);
 
-  WiFiManagerParameter label_broker("<label class='label'>Адрес брокера:</label>");
-  wm.addParameter(&label_broker);
-  WiFiManagerParameter param_mqtt_host("mqtt_host", "", conf.mqtt_host, MQTT_HOST_LEN-1);
+  LongParameter param_mqtt_period("mqtt_period", "Период отправки показаний, мин.:", conf.mqtt_period);
+  wm.addParameter(&param_mqtt_period);
+
+  WiFiManagerParameter param_mqtt_host("mqtt_host", "Адрес брокера:", conf.mqtt_host, MQTT_HOST_LEN-1);
   wm.addParameter(&param_mqtt_host);
 
-  WiFiManagerParameter label_port("<label class='label'>Порт:</label>");
-  wm.addParameter(&label_port);
-  LongParameter param_mqtt_port("mqtt_port", "", conf.mqtt_port);
+  LongParameter param_mqtt_port("mqtt_port", "Порт:", conf.mqtt_port);
   wm.addParameter(&param_mqtt_port);
 
-  WiFiManagerParameter label_login("<label class='label'>Логин:</label>");
-  wm.addParameter(&label_login);
-  WiFiManagerParameter param_mqtt_login("mqtt_login", "", conf.mqtt_login, MQTT_LOGIN_LEN-1);
+  WiFiManagerParameter param_mqtt_login("mqtt_login", "Логин:", conf.mqtt_login, MQTT_LOGIN_LEN-1);
   wm.addParameter(&param_mqtt_login);
 
-  WiFiManagerParameter label_passw("<label class='label'>Пароль:</label>");
-  wm.addParameter(&label_passw);
-  WiFiManagerParameter param_mqtt_password("mqtt_password", "", conf.mqtt_password, MQTT_PASSWORD_LEN-1);
+  WiFiManagerParameter param_mqtt_password("mqtt_password", "Пароль:", conf.mqtt_password, MQTT_PASSWORD_LEN-1);
   wm.addParameter(&param_mqtt_password);
 
-  WiFiManagerParameter label_topic("<label class='label'>Топик показаний:</label>");
-  wm.addParameter(&label_topic);
-  WiFiManagerParameter param_mqtt_topic("mqtt_topic", "", conf.mqtt_topic, MQTT_TOPIC_LEN-1);
+  WiFiManagerParameter param_mqtt_topic("mqtt_topic", "Топик данных:", conf.mqtt_topic, MQTT_TOPIC_LEN-1);
   wm.addParameter(&param_mqtt_topic);
 
-  WiFiManagerParameter label_ha_topic("<label class='label'>Топик Home Assistant:</label>");
-  wm.addParameter(&label_ha_topic);
-  WiFiManagerParameter param_mqtt_discovery_topic("mqtt_discovery_topic", "", conf.mqtt_discovery_topic, MQTT_TOPIC_LEN-1);
+  WiFiManagerParameter param_mqtt_discovery_topic("mqtt_discovery_topic", "Топик Home Assistant:", conf.mqtt_discovery_topic, MQTT_TOPIC_LEN-1);
   wm.addParameter(&param_mqtt_discovery_topic);
 
   WiFiManagerParameter div_checkbox("<label class='chk-box'>Автоматическое добавление в Home Assistant");
@@ -151,6 +102,15 @@ void startAP(Config &conf) {
   wm.addParameter(&param_mqtt_auto_discovery);
   WiFiManagerParameter div_end_checkbox("<span class='box'></span></label>");
   wm.addParameter(&div_end_checkbox);
+
+  WiFiManagerParameter subtitle_stat("<h3>Статистика</h3>");
+  wm.addParameter(&subtitle_stat);
+
+  LongParameter param_stat_period("stat_period", "Период отправки статистики, сек.:", conf.stat_period);
+  wm.addParameter(&param_stat_period);
+
+  WiFiManagerParameter param_stat_host("stat_host", "URL сбора статистики:", conf.stat_host, STAT_HOST_LEN-1);
+  wm.addParameter(&param_stat_host);
 
 //extra conf ------------------------------------------------------------------------------------
   WiFiManagerParameter checkbox("<label class='chk-box'>Расширенные настройки<input type='checkbox' id='chbox' name='chbox' onclick='extraConf()'><span class='box'></span></label>");
@@ -161,7 +121,7 @@ void startAP(Config &conf) {
   WiFiManagerParameter subtitle_network("<h3>Сетевые настройки</h3>");
   wm.addParameter(&subtitle_network);
 
-  String mac("<label class='label'>MAC адрес: ");
+  String mac("<label>MAC адрес: ");
   mac += WiFi.macAddress();
   mac += "</label><br /><br />";
   WiFiManagerParameter label_mac(mac.c_str());
@@ -174,7 +134,7 @@ void startAP(Config &conf) {
   IPAddressParameter param_mask("mask", "Маска подсети:", IPAddress(conf.mask));
   wm.addParameter(&param_mask);
 
-  WiFiManagerParameter label_phy_mode("<label class='label'>Режим работы WiFi:</label>");
+  WiFiManagerParameter label_phy_mode("<label>Режим работы WiFi:</label>");
   wm.addParameter(&label_phy_mode);
   DropdownParameter dropdown_phy_mode("wifi_phy_mode");
   dropdown_phy_mode.add_option(0, "Авто", conf.wifi_phy_mode);
@@ -186,29 +146,21 @@ void startAP(Config &conf) {
   WiFiManagerParameter param_ntp_server("ntp_server", "Сервер времени (NTP):", conf.ntp_server, NTP_HOST_LEN - 1);
   wm.addParameter(&param_ntp_server);
 
-  WiFiManagerParameter label_tz("<label class='label'>Часовой пояс (разница с UTC):</label>");
-  wm.addParameter(&label_tz);
-  LongParameter param_tz("tz", "", conf.tz);
+  LongParameter param_tz("tz", "Часовой пояс (разница с UTC):", conf.tz);
   wm.addParameter(&param_tz);
 
 //extra conf end---------------------------------------------------------------------------------
   WiFiManagerParameter div_end("</div>");
   wm.addParameter(&div_end);
 
-// set custom channel
-// wm.setWiFiAPChannel(13);
+  // set custom channel
+  // wm.setWiFiAPChannel(13);
   
-// set AP hidden
-// wm.setAPHidden(true);
-
-  if(!WMISBLOCKING){
-    wm.setConfigPortalBlocking(false);
-  }
+  // set AP hidden
+  // wm.setAPHidden(true);
 
   wm.setConfigPortalTimeout(SETUP_TIME_SEC);
-
-  wm.setBreakAfterConfig(true); // needed to use saveWifiCallback
-
+  WiFi.setPhyMode(WIFI_PHY_MODE_11N);
   // set custom webserver port, automatic captive portal does not work with custom ports!
   // wm.setHttpPort(8080);
 
@@ -222,8 +174,8 @@ void startAP(Config &conf) {
   strncpy0(conf.password, wm.getWiFiPass().c_str(), PASSW_LEN);
   conf.counter_t0 = param_counter_t0.getValue();
   conf.coeff = param_coeff.getValue();
-  conf.send_period = param_send_period.getValue();
 
+  conf.mqtt_period = param_mqtt_period.getValue();
   strncpy0(conf.mqtt_host, param_mqtt_host.getValue(), MQTT_HOST_LEN);
   conf.mqtt_port = param_mqtt_port.getValue();
   strncpy0(conf.mqtt_login, param_mqtt_login.getValue(), MQTT_LOGIN_LEN);
@@ -231,6 +183,9 @@ void startAP(Config &conf) {
   strncpy0(conf.mqtt_topic, param_mqtt_topic.getValue(), MQTT_TOPIC_LEN);
   strncpy0(conf.mqtt_discovery_topic, param_mqtt_discovery_topic.getValue(), MQTT_TOPIC_LEN);
   conf.mqtt_auto_discovery = param_mqtt_auto_discovery.getValue();
+
+  conf.stat_period = param_stat_period.getValue();
+  strncpy0(conf.stat_host, param_stat_host.getValue(), STAT_HOST_LEN);
 
   conf.ip = param_ip.getValue();
   if (conf.ip) {

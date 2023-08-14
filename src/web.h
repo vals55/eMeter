@@ -3,6 +3,7 @@
 #include <avr/pgmspace.h>
 
 extern void startWeb();
+extern void stoptWeb();
 extern void handleWeb();
 
 const char HTTP_MAIN[] PROGMEM = "<!DOCTYPE html><html lang='en'><head><meta name='format-detection' content='telephone=no'><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1,user-scalable=no'/><title>eMeter</title>"

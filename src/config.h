@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 #define VERSION 1
-#define FIRMWARE_VERSION "0.1"
+#define FIRMWARE_VERSION "0.2"
 #define BRAND_NAME "eMeter"
 
 #define SSID_LEN 32
@@ -13,6 +13,8 @@
 #define MQTT_LOGIN_LEN 32
 #define MQTT_PASSWORD_LEN 32
 #define MQTT_TOPIC_LEN 64
+
+#define STAT_HOST_LEN 64
 
 #ifndef DISCOVERY_TOPIC
 #define HA_DISCOVERY_TOPIC "homeassistant"
@@ -45,8 +47,8 @@ struct Config {
     float counter_t3;
 
     uint32_t coeff;
-    uint16_t send_period = 10;
 
+    uint16_t mqtt_period = 10;
     char     mqtt_host[MQTT_HOST_LEN] = {0};
     uint16_t mqtt_port;
     char     mqtt_login[MQTT_LOGIN_LEN] = {0};
@@ -54,6 +56,9 @@ struct Config {
     char     mqtt_topic[MQTT_TOPIC_LEN] = {0};
     char     mqtt_discovery_topic[MQTT_TOPIC_LEN] = HA_DISCOVERY_TOPIC;
     uint8_t  mqtt_auto_discovery = MQTT_AUTO_DISCOVERY;
+
+    uint16_t stat_period = 60;
+    char     stat_host[STAT_HOST_LEN] = {0};
 
     uint32_t ip;
     uint32_t gateway;
@@ -64,7 +69,7 @@ struct Config {
 
     uint8_t wifi_bssid[6] = {0};
     uint8_t wifi_channel = 0;
-    uint8_t wifi_phy_mode = 0;
+    uint8_t wifi_phy_mode = 3;
 };
 
 extern void storeConfig(const Config &conf);

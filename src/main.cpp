@@ -27,6 +27,8 @@
   #define ESP8266
 #endif
 #define BUTTON 5
+#define SETUP_LED D2
+
 #define BTN_HOLD_SETUP 5000
 
 void sendData();
@@ -38,6 +40,10 @@ Extra ext;
 
 void setupBoard() {
   
+  digitalWrite(SETUP_LED, HIGH);
+#ifdef USEWEB
+  stoptWeb();
+#endif
   work_cycle.detach();
   WiFi.persistent(false);
   WiFi.disconnect();
@@ -49,6 +55,8 @@ void setupBoard() {
   startAP(conf);
 
   wifiShutdown();
+
+  digitalWrite(SETUP_LED, LOW);
   
   rlog_i("info", "Restart ESP");
   ESP.restart();
@@ -69,6 +77,9 @@ void sendData() {
 
 void setup() {
   boolean success = false;
+
+  pinMode(SETUP_LED, OUTPUT);
+  digitalWrite(SETUP_LED, LOW);
 
   Serial.begin(115200);
   Serial.println();
@@ -103,8 +114,10 @@ void setup() {
   success = syncTime(conf);
   rlog_i("info", "sync_ntp_time = %d", success);
   
-  work_cycle.attach(conf.send_period, sendData);
-  
+  if(conf.mqtt_period) {
+    work_cycle.attach(conf.mqtt_period, sendData);
+  }
+
   #ifdef USEOTA
     ArduinoOTA.begin();
   #endif

@@ -63,6 +63,12 @@ void startWeb() {
   server.begin();
 }
 
+void stoptWeb() {
+
+  rlog_i("info", "WEB stop");
+  server.stop();
+}
+
 void handleWeb() {
 
   server.handleClient();

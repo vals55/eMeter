@@ -16,7 +16,7 @@ struct Offset {
     uint32_t impulses;
 };
 struct Calculations {
-    float voltage;
+    float voltage = 220.0;
     float current;
     float power;
     float energy;
