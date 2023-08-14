@@ -5,6 +5,7 @@
 #include <ESP8266WebServer.h>
 
 extern Measurements data;
+extern Extra ext;
 ESP8266WebServer server;   
 
 void sendMessage(String &message) {
@@ -17,24 +18,24 @@ void sendMessage(String &message) {
   message += String(data.power);
   message += F(", \"frequency\": ");
   message += String(data.frequency);
-  message += F(", \"maxvoltage\": ");
-  message += String(data.maxvoltage);
-  message += F(", \"maxcurrent\": ");
-  message += String(data.maxcurrent);
-  message += F(", \"maxpower\": ");
-  message += String(data.maxpower);
-  message += F(", \"maxfreq\": ");
-  message += String(data.maxfreq);
-  message += F(", \"minvoltage\": ");
-  message += String(data.minvoltage);
-  message += F(", \"mincurrent\": ");
-  message += String(data.mincurrent);
-  message += F(", \"minpower\": ");
-  message += String(data.minpower);
-  message += F(", \"minfreq\": ");
-  message += String(data.minfreq);
   message += F(", \"energy\": ");
   message += String(data.energy);
+  message += F(", \"maxvoltage\": ");
+  message += String(ext.maxvoltage);
+  message += F(", \"maxcurrent\": ");
+  message += String(ext.maxcurrent);
+  message += F(", \"maxpower\": ");
+  message += String(ext.maxpower);
+  message += F(", \"maxfreq\": ");
+  message += String(ext.maxfreq);
+  message += F(", \"minvoltage\": ");
+  message += String(ext.minvoltage);
+  message += F(", \"mincurrent\": ");
+  message += String(ext.mincurrent);
+  message += F(", \"minpower\": ");
+  message += String(ext.minpower);
+  message += F(", \"minfreq\": ");
+  message += String(ext.minfreq);
   message += F("}");
   rlog_i("info", "WEB message %s", message.c_str());
 }

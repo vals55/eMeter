@@ -8,6 +8,7 @@
 #include "data.h"
 #include "wifi.h"
 #include "setup.h"
+#include "calc.h"
 
 #define USEOTA
 // enable OTA
@@ -33,6 +34,7 @@ void sendData();
 Ticker work_cycle;
 Config conf;
 Measurements data;
+Extra ext;
 
 void setupBoard() {
   
@@ -61,21 +63,8 @@ void sendData() {
   data.current = (float)random(1000, 200000)/100.f;
   data.power = (float)random(1000, 200000)/100.f;
   data.frequency = (float)random(1000, 200000)/100.f;
-  
-  data.maxvoltage = max(data.maxvoltage, data.voltage);
-  data.maxcurrent = max(data.maxcurrent, data.current);
-  data.maxpower = max(data.maxpower, data.power);
-  data.maxfreq = max(data.maxfreq, data.frequency);
 
-  if(!data.minvoltage) data.minvoltage = data.voltage;
-  if(!data.mincurrent) data.mincurrent = data.current;
-  if(!data.minpower) data.minpower = data.power;
-  if(!data.minfreq) data.minfreq = data.frequency;
-
-  data.minvoltage = min(data.minvoltage, data.voltage);
-  data.mincurrent = min(data.mincurrent, data.current);
-  data.minpower = min(data.minpower, data.power);
-  data.minfreq = min(data.minfreq, data.frequency);
+  calcExtraData(data, ext);
 }
 
 void setup() {

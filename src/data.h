@@ -7,7 +7,21 @@ struct Measurements {
     float current;
     float power;
     float frequency;
+    float energy;
 
+    uint32_t impulses;
+};
+struct Offset {
+    float energy;
+    uint32_t impulses;
+};
+struct Calculations {
+    float voltage;
+    float current;
+    float power;
+    float energy;
+};
+struct Extra {
     float maxvoltage;
     float maxcurrent;
     float maxpower;
@@ -17,11 +31,6 @@ struct Measurements {
     float mincurrent;
     float minpower;
     float minfreq;
-
-    float energy;
-    uint32_t impulses;
-    float offset_energy;
-    uint32_t offset_imp;
 };
 
 #endif
