@@ -160,6 +160,7 @@ void startAP(Config &conf) {
   // wm.setAPHidden(true);
 
   wm.setConfigPortalTimeout(SETUP_TIME_SEC);
+  wm.setBreakAfterConfig(true);
   WiFi.setPhyMode(WIFI_PHY_MODE_11N);
   // set custom webserver port, automatic captive portal does not work with custom ports!
   // wm.setHttpPort(8080);
