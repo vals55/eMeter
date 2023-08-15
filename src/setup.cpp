@@ -7,7 +7,7 @@
 
 WiFiManager wm;
 
-#define SETUP_TIME_SEC 600
+#define SETUP_TIME_SEC 300
 
 // #define CALLBACK_NEED
 #ifdef CALLBACK_NEED
