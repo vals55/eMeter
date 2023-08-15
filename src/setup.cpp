@@ -12,7 +12,7 @@ WiFiManager wm;
 // #define CALLBACK_NEED
 #ifdef CALLBACK_NEED
 void handleRoute(){
-  rlog_i("info", "[HTTP] handle route");
+  rlog_i("info", "[HTTP] /custom handle route");
   wm.server->send(200, "text/plain", "hello from user code");
 }
 
