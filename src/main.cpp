@@ -26,7 +26,7 @@
 #ifndef ESP8266
   #define ESP8266
 #endif
-#define BUTTON S3
+#define BUTTON 16
 #define SETUP_LED D2
 
 #define BTN_HOLD_SETUP 5000
