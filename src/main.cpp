@@ -66,6 +66,7 @@ void sendData() {
   
   String curr_time = getCurrentTime();
   rlog_i("info", "Current time: %s", curr_time.c_str());
+  rlog_i("info", "WiFi RSSI %d", WiFi.RSSI());
   
   data.voltage = (float)random(1000, 200000)/100.0;
   data.current = (float)random(1000, 200000)/100.f;
@@ -117,7 +118,7 @@ void setup() {
   if(conf.mqtt_period) {
     work_cycle.attach(conf.mqtt_period, sendData);
   }
-
+  
   #ifdef USEOTA
     ArduinoOTA.begin();
   #endif
@@ -125,7 +126,6 @@ void setup() {
   #ifdef USEWEB
     startWeb();
   #endif
-
 }
 
 bool flag = false;

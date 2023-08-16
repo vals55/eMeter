@@ -36,6 +36,8 @@ void sendMessage(String &message) {
   message += String(ext.minpower);
   message += F(", \"minfreq\": ");
   message += String(ext.minfreq);
+  message += F(", \"rssi\": ");
+  message += String(WiFi.RSSI());
   message += F("}");
   rlog_i("info", "WEB message %s", message.c_str());
 }
