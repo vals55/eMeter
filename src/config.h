@@ -43,8 +43,6 @@ struct Config {
 
     float counter_t0;
     float counter_t1;
-    float counter_t2;
-    float counter_t3;
 
     uint32_t coeff;
 

@@ -9,17 +9,22 @@ struct Measurements {
     float frequency;
     float energy;
 
-    uint32_t impulses;
+    uint32_t impulses1;
+    uint32_t impulses2;
 };
 struct Offset {
     float energy;
-    uint32_t impulses;
+    uint32_t impulses1;
+    uint32_t impulses2;
 };
 struct Calculations {
     float voltage = 220.0;
-    float current;
-    float power;
-    float energy;
+    float current1;
+    float power1;
+    float energy1;
+    float current2;
+    float power2;
+    float energy2;
 };
 struct Extra {
     float maxvoltage;

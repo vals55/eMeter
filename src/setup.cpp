@@ -66,8 +66,10 @@ void startAP(Config &conf) {
   WiFiManagerParameter subtitle_energy("<h3>Электроэнергия</h3>");
   wm.addParameter(&subtitle_energy);
 
-  FloatParameter param_counter_t0("counter_t0", "Показания счетчика, кВт*ч:", conf.counter_t0);
+  FloatParameter param_counter_t0("counter_t0", "Показания счетчика T0, кВт*ч:", conf.counter_t0);
   wm.addParameter(&param_counter_t0);
+  FloatParameter param_counter_t1("counter_t1", "Показания счетчика T1, кВт*ч:", conf.counter_t1);
+  wm.addParameter(&param_counter_t1);
 
   LongParameter param_coeff("coeff", "Коэффициент счетчика, имп./кВт*ч:", conf.coeff);
   wm.addParameter(&param_coeff);
@@ -174,6 +176,7 @@ void startAP(Config &conf) {
   strncpy0(conf.ssid, wm.getWiFiSSID().c_str(), SSID_LEN);
   strncpy0(conf.password, wm.getWiFiPass().c_str(), PASSW_LEN);
   conf.counter_t0 = param_counter_t0.getValue();
+  conf.counter_t1 = param_counter_t1.getValue();
   conf.coeff = param_coeff.getValue();
 
   conf.mqtt_period = param_mqtt_period.getValue();
