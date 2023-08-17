@@ -1,6 +1,7 @@
 #include "web.h"
 #include "rlog.h"
 #include "data.h"
+#include "config.h"
 #include <ESP8266WiFi.h> 
 #include <ESP8266WebServer.h>
 
@@ -42,6 +43,8 @@ void sendMessage(String &message) {
   message += String(ESP.getFreeHeap()>>10);
   message += F(", \"freq\": ");
   message += String(ESP.getCpuFreqMHz());
+  message += F(", \"firmware\": ");
+  message += String(FIRMWARE_VERSION);
   message += F("}");
   rlog_i("info", "WEB message %s", message.c_str());
 }
