@@ -38,6 +38,10 @@ void sendMessage(String &message) {
   message += String(ext.minfreq);
   message += F(", \"rssi\": ");
   message += String(WiFi.RSSI());
+  message += F(", \"heap\": ");
+  message += String(ESP.getFreeHeap()>>10);
+  message += F(", \"freq\": ");
+  message += String(ESP.getCpuFreqMHz());
   message += F("}");
   rlog_i("info", "WEB message %s", message.c_str());
 }

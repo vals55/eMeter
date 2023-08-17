@@ -40,7 +40,8 @@ void wifiBegin(Config &conf) {
   WiFi.setSleepMode(WIFI_NONE_SLEEP); // disable sleep, can improve ap stability
   delay(200);
   wifiSetMode(WIFI_STA);
-  
+  rlog_i("info", "Set mode STA");
+ 
   if (conf.wifi_phy_mode) {
     if (!WiFi.setPhyMode((WiFiPhyMode_t)conf.wifi_phy_mode)) {
       rlog_i("info", "Failed set phy mode %s", conf.wifi_phy_mode);
@@ -50,15 +51,18 @@ void wifiBegin(Config &conf) {
   if (!WiFi.getAutoConnect()) {
     WiFi.setAutoConnect(true);
   }
+  rlog_i("info", "WiFi autoconnect done.");
 
   if (isDHCP(conf)) {
     IPAddress fallback_dns_server;
     
     fallback_dns_server.fromString(DEF_FALLBACK_DNS); 
     WiFi.config(conf.ip, conf.gateway, conf.mask, conf.gateway, fallback_dns_server);
+    rlog_i("info", "WiFi static address.");
   }
 
   WiFi.hostname(getDeviceName());
+  rlog_i("info", "WiFi host name done.");
 
   delay(100); // подождем чтобы проинициализировалась сеть
 
@@ -68,6 +72,7 @@ void wifiBegin(Config &conf) {
   else {
     WiFi.begin(conf.ssid, conf.password);
   }
+  rlog_i("info", "WiFi begin.");
 
   WiFi.waitForConnectResult(ESP_CONNECT_TIMEOUT);
 }
@@ -106,6 +111,7 @@ bool wifiConnect(Config &conf) {
   do {
     rlog_i("info", "WIFI: attempt %d of %d", WIFI_CONNECT_ATTEMPTS - attempts + 1, WIFI_CONNECT_ATTEMPTS);
     wifiBegin(conf);
+    rlog_i("info", "WiFi begin done.");
     if (WiFi.isConnected()) {
       conf.wifi_channel = WiFi.channel(); // сохраняем для быстрого коннекта
       uint8_t *bssid = WiFi.BSSID();

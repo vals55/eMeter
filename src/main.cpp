@@ -67,6 +67,8 @@ void sendData() {
   String curr_time = getCurrentTime();
   rlog_i("info", "Current time: %s", curr_time.c_str());
   rlog_i("info", "WiFi RSSI %d", WiFi.RSSI());
+  rlog_i("info", "heap %d", ESP.getFreeHeap()>>10);
+  rlog_i("info", "CPU freq %d", ESP.getCpuFreqMHz());
   
   data.voltage = (float)random(1000, 200000)/100.0;
   data.current = (float)random(1000, 200000)/100.f;
