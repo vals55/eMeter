@@ -4,6 +4,8 @@
 #include "config.h"
 #include <ESP8266WiFi.h> 
 #include <ESP8266WebServer.h>
+#include <ESP8266HTTPUpdateServer.h>
+#include <ESP8266HttpUpdate.h>
 
 extern Measurements data;
 extern Extra ext;
@@ -64,11 +66,22 @@ void handleRoot() {
   server.send(200, F("text/html"), FPSTR(HTTP_MAIN));
 }
 
+void handleUpdate() {
+
+  rlog_i("info", "WEB update request");
+  if(!server.authenticate("admin", "admin"))
+      return server.requestAuthentication();
+  server.send(200, "text/plain", "Login OK");  
+  rlog_i("info", "WEB Login OK");
+  server.send(200, F("text/plain"), "update");
+}
+
 void startWeb() {
 
   rlog_i("info", "WEB start");
   server.on("/", handleRoot);
   server.on("/states", handleStates);
+  server.on("/update", handleUpdate);
   server.begin();
 }
 
