@@ -37,7 +37,7 @@ Config conf;
 Measurements data;
 Extra ext;
 #ifdef USEWEB
-bool needOTA = false;
+bool needOTA = true;
 bool webActive = false;
 #endif
 

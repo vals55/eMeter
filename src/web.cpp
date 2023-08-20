@@ -2,6 +2,7 @@
 #include "rlog.h"
 #include "data.h"
 #include "config.h"
+#include "utils.h"
 #include <ESP8266WiFi.h> 
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
@@ -12,25 +13,38 @@ extern Extra ext;
 extern bool needOTA;
 bool needStartOTA = false;
 WiFiClient client;
-
 ESP8266WebServer server;   
 
 void updateStarted() {
   rlog_i("info", "CALLBACK: HTTP update process started");
+  //strncpy0(upd.status, "Обновление началось", 20);
 }
  
 void updateFinished() {
   rlog_i("info", "CALLBACK: HTTP update process finished");
+  //strncpy0(upd.status, "Завершено. Перезапуск.", 23);
   needOTA = false;
   needStartOTA = false;
 }
  
 void updateProgress(int cur, int total) {
   rlog_i("info", "CALLBACK: HTTP update process at %d of %d bytes...", cur, total);
+  String message;
+  message.reserve(100);
+  message = F("{\"style-progress\": ");
+  char buffer[64];
+  sprintf(buffer, "\"width:%d%%\"", 100 * cur / total);
+  message += String(buffer);
+  message += F(", \"inner-status\": ");
+  sprintf(buffer, "\"Скачано %d из %d\"", cur, total);
+  message += String(buffer);
+  message += F("}");
+  server.send(200, F("text/plain"), message);
 }
  
 void updateError(int err) {
   rlog_i("info", "CALLBACK: HTTP update fatal error code %d", err);
+  //strncpy0(upd.status,"Ошибка обновления.", 18);
 }
 
 void startOTA() {
@@ -66,6 +80,8 @@ void startOTA() {
       break;
   }
 }
+
+char buffer[32] = {0};
 
 void sendMessage(String &message) {
 
@@ -104,8 +120,8 @@ void sendMessage(String &message) {
   message += F(", \"inner-firmware\": ");
   message += String(FIRMWARE_VERSION);
   message += F(", \"style-check\": ");
-  String display = needOTA ? "\"block\"" : "\"none\"";
-  message += String(display);
+  String buffer = needOTA ? "\"display:block\"" : "\"display:none\"";
+  message += String(buffer);
   message += F("}");
   rlog_i("info", "WEB message %s", message.c_str());
 }
@@ -128,11 +144,7 @@ void handleRoot() {
 void handleUpdate() {
 
   rlog_i("info", "WEB /update request");
-  // if(!server.authenticate("admin", "admin"))
-  //     return server.requestAuthentication();
-  // server.send(200, "text/plain", "Login OK");  
-  // rlog_i("info", "WEB Login OK");
-  // server.send(200, F("text/plain"), "update");
+  startOTA();
 }
 
 bool startWeb() {

@@ -7,7 +7,11 @@ function flip() {
 function _(b) {
     return document.getElementById(b)
 }
-
+function upd() {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', '/update');
+    xhr.send()
+}
 function send(url, milli, _process) {
     const xhr = new XMLHttpRequest();
     xhr.open('GET', url);
