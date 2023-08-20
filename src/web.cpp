@@ -7,81 +7,23 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
+#include <ESP8266HTTPUpdateServer.h>
 
 extern Measurements data;
 extern Extra ext;
 extern bool needOTA;
-bool needStartOTA = false;
 WiFiClient client;
 ESP8266WebServer server;   
+ESP8266HTTPUpdateServer httpUpdater;
 
-void updateStarted() {
-  rlog_i("info", "CALLBACK: HTTP update process started");
-  //strncpy0(upd.status, "Обновление началось", 20);
-}
- 
-void updateFinished() {
-  rlog_i("info", "CALLBACK: HTTP update process finished");
-  //strncpy0(upd.status, "Завершено. Перезапуск.", 23);
-  needOTA = false;
-  needStartOTA = false;
-}
- 
-void updateProgress(int cur, int total) {
-  rlog_i("info", "CALLBACK: HTTP update process at %d of %d bytes...", cur, total);
-  String message;
-  message.reserve(100);
-  message = F("{\"style-progress\": ");
-  char buffer[64];
-  sprintf(buffer, "\"width:%d%%\"", 100 * cur / total);
-  message += String(buffer);
-  message += F(", \"inner-status\": ");
-  sprintf(buffer, "\"Скачано %d из %d\"", cur, total);
-  message += String(buffer);
-  message += F("}");
-  server.send(200, F("text/plain"), message);
-}
- 
-void updateError(int err) {
-  rlog_i("info", "CALLBACK: HTTP update fatal error code %d", err);
-  //strncpy0(upd.status,"Ошибка обновления.", 18);
-}
 
 void startOTA() {
   
   rlog_i("info", "OTA start OTA: ");
+  httpUpdater.setup(&server);
+  //server.begin();
 
-  ESPhttpUpdate.setLedPin(LED_BUILTIN, LOW);
-  ESPhttpUpdate.onStart(updateStarted);
-  ESPhttpUpdate.onEnd(updateFinished);
-  ESPhttpUpdate.onProgress(updateProgress);
-  ESPhttpUpdate.onError(updateError);
-  ESPhttpUpdate.rebootOnUpdate(false);
-  
-  t_httpUpdate_return ret = ESPhttpUpdate.update(client, "http://home.shokurov.ru/bin/firmware.bin");
-  // t_httpUpdate_return ret = ESPhttpUpdate.update(client, "192.168.1.70", 3000, "/update", FIRMWARE_VERSION);
-  switch (ret) {
-    case HTTP_UPDATE_FAILED:
-      rlog_i("info", "HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
-      rlog_i("info", "Retry in 10secs!");
-      delay(10000); // Wait 10secs
-      break;
-
-    case HTTP_UPDATE_NO_UPDATES:
-      rlog_i("info", "HTTP_UPDATE_NO_UPDATES");
-      rlog_i("info", "Your code is up to date!");
-        delay(10000); // Wait 10secs
-      break;
-
-    case HTTP_UPDATE_OK:
-      rlog_i("info", "HTTP_UPDATE_OK");
-      delay(1000); // Wait a second and restart
-      ESP.restart();
-      break;
-  }
 }
-
-char buffer[32] = {0};
 
 void sendMessage(String &message) {
 
@@ -119,9 +61,6 @@ void sendMessage(String &message) {
   message += String(ESP.getCpuFreqMHz());
   message += F(", \"inner-firmware\": ");
   message += String(FIRMWARE_VERSION);
-  message += F(", \"style-check\": ");
-  String buffer = needOTA ? "\"display:block\"" : "\"display:none\"";
-  message += String(buffer);
   message += F("}");
   rlog_i("info", "WEB message %s", message.c_str());
 }
@@ -136,15 +75,23 @@ void handleStates() {
 }
 
 void handleRoot() {
-
+  String page = FPSTR(HTTP_HEADER_MAIN);
+  page += FPSTR(HTTP_SCRIPT1_MAIN);
+  page += FPSTR(HTTP_SCRIPT2_MAIN);
+  page += FPSTR(HTTP_STYLE_MAIN);
+  page += FPSTR(HTTP_BODY_MAIN);
   rlog_i("info", "WEB root request");
-  server.send(200, F("text/html"), FPSTR(HTTP_MAIN));
+  server.send(200, F("text/html"), page);
 }
 
 void handleUpdate() {
-
+  String page = FPSTR(HTTP_HEADER_MAIN);
+  page += FPSTR(HTTP_STYLE_UPDATE);
+  page += FPSTR(HTTP_STYLE_MAIN);
+  page += FPSTR(HTTP_BODY_UPDATE);
   rlog_i("info", "WEB /update request");
-  startOTA();
+  server.sendHeader(F("Content-Encoding"), F("bin"));
+  server.send(200, F("text/html"), page);
 }
 
 bool startWeb() {
@@ -153,6 +100,7 @@ bool startWeb() {
   server.on("/", handleRoot);
   server.on("/states", handleStates);
   server.on("/update", handleUpdate);
+  httpUpdater.setup(&server);
   server.begin();
   return true;
 }
@@ -167,7 +115,4 @@ bool stopWeb() {
 void handleWeb() {
 
   server.handleClient();
-  if(needOTA && needStartOTA) {
-    startOTA();
-  }
 }
