@@ -1,5 +1,5 @@
-#ifndef CONFIG_h_
-#define CONFIG_h_
+#ifndef __CONFIG_H
+#define __CONFIG_H
 
 #include <Arduino.h>
 
@@ -34,6 +34,13 @@
 #define DEFAULT_TZ 3
 
 #define DEFAULT_COEFF 3200
+
+//time
+#define PER_SEC 1000
+#define PER_MIN 60 * 1000
+#define PER_MEASUREMENT 1 * 1000
+#define PER_CHECK_STATE 1 * 1000
+#define PER_CHECK_OTA 24 * 3600 * 1000
 
 struct Config {
     uint8_t version = VERSION;

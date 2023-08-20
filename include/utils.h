@@ -1,5 +1,5 @@
-#ifndef _UTILS_H
-#define _UTILS_H
+#ifndef __UTILS_H
+#define __UTILS_H
 
 #include "config.h"
 

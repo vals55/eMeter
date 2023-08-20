@@ -1,5 +1,5 @@
-#ifndef _DATA_H
-#define _DATA_H
+#ifndef __DATA_H
+#define __DATA_H
 #include <Arduino.h>
 
 struct Measurements {

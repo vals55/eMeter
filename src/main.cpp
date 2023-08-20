@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <Ticker.h>
 #include <WiFiManager.h>
 #include <rlog.h>
 #include "sync_time.h"
@@ -30,21 +29,32 @@
 #define SETUP_LED 2
 
 #define BTN_HOLD_SETUP 5000
+#define BTN_CLICK 200
 
 void sendData();
 
-Ticker work_cycle;
 Config conf;
 Measurements data;
 Extra ext;
+#ifdef USEWEB
+bool needOTA = false;
+bool webActive = false;
+#endif
+
+void flashLED() {
+  digitalWrite(SETUP_LED, HIGH);
+  delay(20);
+  digitalWrite(SETUP_LED, LOW);
+}
 
 void setupBoard() {
   
   digitalWrite(SETUP_LED, HIGH);
 #ifdef USEWEB
-  stoptWeb();
+    if(webActive) {
+      webActive = stopWeb();
+    }
 #endif
-  work_cycle.detach();
   WiFi.persistent(false);
   WiFi.disconnect();
   WiFi.setSleepMode(WIFI_NONE_SLEEP);
@@ -78,8 +88,33 @@ void sendData() {
   calcExtraData(data, ext);
 }
 
+bool isFirmwareReady() {
+  
+  WiFiClient http;
+  String ret;
+  if(http.connect("home.shokurov.ru", 80)) {
+    String request("mac=");
+    request += WiFi.macAddress();
+    http.printf("GET /check?%s HTTP/1.1\r\n", request.c_str());
+    http.println("Host: home.shokurov.ru");
+    http.println("User-agent: ESP8266/1.0");
+    http.println("Connection: close");
+    http.println();
+    ret = http.readString();
+    ret = ret.substring(ret.indexOf("md5:")+4);
+  }
+  http.stop();
+
+  if(ret == "-1" || ret == ESP.getSketchMD5()) {
+    rlog_i("info", "OTA not need - identical");
+    return false;
+  }
+  rlog_i("info", "firmware=%s vs sketch=%s", ret.c_str(), ESP.getSketchMD5().c_str());
+  return true;
+}
+
 void setup() {
-  boolean success = false;
+  bool success = false;
 
   pinMode(SETUP_LED, OUTPUT);
   digitalWrite(SETUP_LED, LOW);
@@ -117,31 +152,37 @@ void setup() {
   success = syncTime(conf);
   rlog_i("info", "sync_ntp_time = %d", success);
   
-  if(conf.mqtt_period) {
-    work_cycle.attach(conf.mqtt_period, sendData);
-  }
-  
   #ifdef USEOTA
     ArduinoOTA.begin();
   #endif
-
+  
   #ifdef USEWEB
-    startWeb();
+    webActive = startWeb();
   #endif
 }
 
 bool flag = false;
 uint32_t btnTimer = 0;
+uint32_t mqttTimer = 0;
+uint32_t statisticTimer = 0;
+uint32_t measurementTimer = 0;
+uint32_t stateTimer = 0;
+uint32_t otaTimer = 0;
 
 void loop() {
+  bool success = false;
 
   #ifdef USEOTA
   ArduinoOTA.handle();
   #endif
+  
+  if((WiFi.status() == WL_CONNECTED)) {
   #ifdef USEWEB
     handleWeb();
   #endif
+  }
 
+  //button
 	bool btnState = digitalRead(BUTTON);
   if (btnState && !flag && millis() - btnTimer > 100) {
     flag = true;
@@ -153,9 +194,63 @@ void loop() {
     rlog_i("info", "PRESS HOLD");
     setupBoard();
   }
+  if (!btnState && flag && millis() - btnTimer > BTN_CLICK) {
+    btnTimer = millis();
+#ifdef USEWEB
+    if(webActive) {
+      webActive = stopWeb();
+    } else {
+      webActive = startWeb();
+    }
+#endif
+    rlog_i("info", "MAKE CLICK");
+  }
   if (!btnState && flag && millis() - btnTimer > 100) {
     flag = false;
     btnTimer = millis();
     rlog_i("info", "RELEASE");
+  }
+  
+  // timers
+  // mqtt
+  if (conf.mqtt_period && millis() - mqttTimer >= conf.mqtt_period * PER_MIN) {
+    mqttTimer = millis();
+    rlog_i("info", "timer MQTT");
+    //sendData();
+    flashLED();
+  }
+  // statistic
+  if (conf.stat_period && millis() - statisticTimer >= conf.stat_period * PER_SEC) {
+    statisticTimer = millis();
+    //sendData();
+    rlog_i("info", "timer Statistic");
+    flashLED();
+  }
+  // measurement
+  if (millis() - statisticTimer >= PER_MEASUREMENT) {
+    statisticTimer = millis();
+    //sendData();
+    flashLED();
+  }
+  // state
+  if (millis() - stateTimer >= PER_CHECK_STATE) {
+    stateTimer = millis();
+    flashLED();
+  }
+  // OTA
+  if (millis() - otaTimer >= PER_CHECK_OTA) {
+    otaTimer = millis();
+#ifdef USEWEB
+    if(webActive) {
+      webActive = stopWeb();
+      needOTA = isFirmwareReady();
+      webActive = startWeb();
+    } else {
+      needOTA = isFirmwareReady();
+    }
+    rlog_i("info", "timer OTA ready=%d", needOTA);
+#endif
+    success = syncTime(conf);
+    rlog_i("info", "sync_ntp_time=%d", success);
   }
 }

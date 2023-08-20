@@ -1,5 +1,5 @@
-#ifndef SYNCTIME_h_
-#define SYNCTIME_h_
+#ifndef __SYNCTIME_H
+#define __SYNCTIME_H
 
 #include "config.h"
 

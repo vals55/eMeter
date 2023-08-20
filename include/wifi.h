@@ -1,5 +1,5 @@
-#ifndef _WIFI_H_
-#define _WIFI_H_
+#ifndef __WIFI_H
+#define __WIFI_H
 
 #include <ESP8266WiFi.h>
 #include "config.h"

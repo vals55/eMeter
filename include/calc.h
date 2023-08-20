@@ -1,5 +1,5 @@
-#ifndef _CALC_H
-#define _CALC_H
+#ifndef __CALC_H
+#define __CALC_H
 #include "data.h"
 #include "calc.h"
 

@@ -1,5 +1,5 @@
-#ifndef SETUP_H_
-#define SETUP_H_
+#ifndef __SETUP_H
+#define __SETUP_H
 
 #include <Arduino.h>
 #include <WiFiManager.h>

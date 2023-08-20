@@ -1,5 +1,5 @@
-#ifndef PORTING_H_
-#define PORTING_H_
+#ifndef __PORTING_H
+#define __PORTING_H
 
 #ifdef ESP8266
     #include <ESP8266WiFi.h>
