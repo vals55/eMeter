@@ -37,8 +37,9 @@ Config conf;
 Measurements data;
 Extra ext;
 #ifdef USEWEB
-bool needOTA = true;
+uint8_t needOTA = NO_UPDATE;
 bool webActive = false;
+String ver;
 #endif
 
 void flashLED() {
@@ -88,10 +89,13 @@ void sendData() {
   calcExtraData(data, ext);
 }
 
-bool isFirmwareReady() {
+#ifdef USEWEB
+uint8_t isFirmwareReady() {
   
   WiFiClient http;
   String ret;
+  int ind_md5;
+
   if(http.connect("home.shokurov.ru", 80)) {
     String request("mac=");
     request += WiFi.macAddress();
@@ -101,14 +105,27 @@ bool isFirmwareReady() {
     http.println("Connection: close");
     http.println();
     ret = http.readString();
-    ret = ret.substring(ret.indexOf("md5:")+4);
+    ind_md5 = ret.indexOf("md5:");
+    ver = ret.substring(ret.indexOf("firmware:") + 9, ind_md5);
+    ret = ret.substring(ind_md5 + 4);
   }
   http.stop();
 
-  if(ret == "-1" || ret == ESP.getSketchMD5()) {
-    rlog_i("info", "OTA not need - identical");
-    return false;
+  if(ret == "-1") {
+    rlog_i("info", "OTA not found");
+    return NO_UPDATE;
+  } else if (ret == ESP.getSketchMD5()) {
+    rlog_i("info", "OTA not need");
+    return OTA_UPDATE_THE_SAME;
+  } else if (ver != FIRMWARE_VERSION) {
+    rlog_i("info", "OTA need");
+    return OTA_UPDATE_READY;
+  } else {
+    rlog_i("info", "OTA need");
+    return OTA_UPDATE_READY;
   }
+#endif  
+  
   rlog_i("info", "firmware=%s vs sketch=%s", ret.c_str(), ESP.getSketchMD5().c_str());
   return true;
 }
@@ -168,6 +185,7 @@ uint32_t statisticTimer = 0;
 uint32_t measurementTimer = 0;
 uint32_t stateTimer = 0;
 uint32_t otaTimer = 0;
+uint32_t secTimer = 0;
 
 void loop() {
   bool success = false;
@@ -253,4 +271,17 @@ void loop() {
     success = syncTime(conf);
     rlog_i("info", "sync_ntp_time=%d", success);
   }
+  // one sec timer
+  if (millis() - secTimer >= 5*PER_SEC) {
+#ifdef USEWEB
+    if(needOTA == OTA_UPDATE_FINISH) {
+      ESP.restart();
+    }
+    if(needOTA == OTA_UPDATE_START) {
+      startOTA();
+      needOTA = OTA_UPDATE_FINISH;
+    }
+    secTimer = millis();
+  }
+#endif
 }

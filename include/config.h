@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 #define VERSION 1
-#define FIRMWARE_VERSION "0.3"
+#define FIRMWARE_VERSION "0.31"
 #define BRAND_NAME "eMeter"
 
 #define SSID_LEN 32
@@ -40,7 +40,15 @@
 #define PER_MIN 60 * 1000
 #define PER_MEASUREMENT 1 * 1000
 #define PER_CHECK_STATE 1 * 1000
-#define PER_CHECK_OTA 24 * 3600 * 1000
+#define PER_CHECK_OTA 60 * 1000 //24 * 3600 * 1000
+
+//ota
+#define NO_UPDATE 0
+#define OTA_UPDATE_THE_SAME 1
+#define OTA_UPDATE_READY 2
+#define OTA_UPDATE_START 3
+#define OTA_UPDATE_FINISH 4
+#define OTA_UPDATE_ERROR 5
 
 struct Config {
     uint8_t version = VERSION;
