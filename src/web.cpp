@@ -7,7 +7,6 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
-#include <Ticker.h>
 
 extern Measurements data;
 extern Extra ext;
@@ -18,27 +17,20 @@ extern String ver;
 WiFiClient client;
 ESP8266WebServer server;   
 const char* msg[]  = {
-  "\"Нет новых обновлений.\"", 
-  "\"Обновление уже установлено.\"",
-  "\"Есть свежее обновление v. \"",
-  "\"Загрузка обновления...\"",
+  "\"Обновления не найдены.\"", 
+  "\"Обновление не требуется.\"",
+  "\"Есть новое обновление v. \"",
+  "\"Установка обновления...\"",
   "\"Обновление загружено. Перезагрузка.\"",
   "\"Ошибка обновления.\""
 };
-//Ticker start_later;
-
-void rebootBoard() {
-  ESP.restart();
-}
 
 void updateStarted() {
   rlog_i("info", "CALLBACK: HTTP update process started");
-  //needOTA = OTA_UPDATE_START;
 }
  
 void updateFinished() {
   rlog_i("info", "CALLBACK: HTTP update process finished");
-  //needOTA = OTA_UPDATE_FINISH;
 }
  
 void updateProgress(int cur, int total) {
@@ -61,29 +53,25 @@ void startOTA() {
   ESPhttpUpdate.onError(updateError);
   ESPhttpUpdate.rebootOnUpdate(false);
   
-  t_httpUpdate_return ret = ESPhttpUpdate.update(client, "http://home.shokurov.ru/bin/firmware.bin");
-  // t_httpUpdate_return ret = ESPhttpUpdate.update(client, "192.168.1.70", 3000, "/update", FIRMWARE_VERSION);
+  t_httpUpdate_return ret = ESPhttpUpdate.update(client, OTA_SERVER, OTA_PORT, OTA_REQ, FIRMWARE_VERSION);
   switch (ret) {
     case HTTP_UPDATE_FAILED:
       rlog_i("info", "HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
       rlog_i("info", "Retry in 10secs!");
       needOTA = OTA_UPDATE_ERROR;
-      delay(10000); // Wait 10secs
+      delay(10000); 
       break;
 
     case HTTP_UPDATE_NO_UPDATES:
       rlog_i("info", "HTTP_UPDATE_NO_UPDATES");
       rlog_i("info", "Your code is up to date!");
       needOTA = NO_UPDATE;
-      delay(10000); // Wait 10secs
+      delay(10000); 
       break;
 
     case HTTP_UPDATE_OK:
       rlog_i("info", "HTTP_UPDATE_OK");
-      // delay(1000); // Wait a second and restart
-      // ESP.restart();
-      //needOTA = OTA_UPDATE_FINISH;
-      //secTimer = millis();
+      ESP.restart();
       break;
   }
 }
@@ -177,8 +165,6 @@ void handleLoad() {
   rlog_i("info", "WEB /load request");
   secTimer = millis();
   needOTA = OTA_UPDATE_START;
-  //start_later.attach(2, startOTA);
-  //startOTA();
 }
 
 bool startWeb() {

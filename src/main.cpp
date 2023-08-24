@@ -37,7 +37,7 @@ Config conf;
 Measurements data;
 Extra ext;
 #ifdef USEWEB
-uint8_t needOTA = NO_UPDATE;
+uint8_t needOTA = OTA_UPDATE_THE_SAME;
 bool webActive = false;
 String ver;
 #endif
@@ -96,11 +96,11 @@ uint8_t isFirmwareReady() {
   String ret;
   int ind_md5;
 
-  if(http.connect("home.shokurov.ru", 80)) {
+  if(http.connect(OTA_SERVER, OTA_PORT)) {
     String request("mac=");
     request += WiFi.macAddress();
-    http.printf("GET /check?%s HTTP/1.1\r\n", request.c_str());
-    http.println("Host: home.shokurov.ru");
+    http.printf("GET "OTA_REQ"?%s HTTP/1.1\r\n", request.c_str());
+    http.println("Host: "OTA_SERVER);
     http.println("User-agent: ESP8266/1.0");
     http.println("Connection: close");
     http.println();
@@ -255,7 +255,7 @@ void loop() {
     stateTimer = millis();
     flashLED();
   }
-  // OTA
+  // OTA check firmware
   if (millis() - otaTimer >= PER_CHECK_OTA) {
     otaTimer = millis();
 #ifdef USEWEB
@@ -271,8 +271,8 @@ void loop() {
     success = syncTime(conf);
     rlog_i("info", "sync_ntp_time=%d", success);
   }
-  // one sec timer
-  if (millis() - secTimer >= 5*PER_SEC) {
+  // OTA processing one sec timer
+  if (millis() - secTimer >= 5 * PER_SEC) {
 #ifdef USEWEB
     if(needOTA == OTA_UPDATE_FINISH) {
       ESP.restart();
