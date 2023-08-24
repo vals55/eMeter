@@ -103,12 +103,12 @@ void getData() {
   float frequency = pzem.frequency();
   float pf = pzem.pf();
 
-  data.voltage = isnan(voltage) ? 0.0 : round(pzem.voltage() * 10)/10;
-  data.current = isnan(current) ? 0.0 : round(pzem.current() * 10)/10;
-  data.power = isnan(power) ? 0.0 : round(pzem.power() * 10)/10;
-  data.energy = isnan(energy) ? 0.0 : round(pzem.energy() * 10)/10;
-  data.frequency = isnan(frequency) ? 0.0 : round(pzem.frequency() * 10)/10;
-  data.pf = isnan(pf) ? 0.0 : round(pzem.pf() * 100)/100;
+  data.voltage = isnan(voltage) ? 0.0 : round(voltage * 10)/10;
+  data.current = isnan(current) ? 0.0 : round(current * 10)/10;
+  data.power = isnan(power) ? 0.0 : round(power * 10)/10;
+  data.energy = isnan(energy) ? 0.0 : round(energy * 10)/10;
+  data.frequency = isnan(frequency) ? 0.0 : round(frequency * 10)/10;
+  data.pf = isnan(pf) ? 0.0 : round(pf * 100)/100;
 
   rlog_i("info", "Address: %04x", pzem.readAddress());
   rlog_i("info", "Voltage: %.1f", data.voltage);
