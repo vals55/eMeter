@@ -40,7 +40,7 @@
 #define PER_MIN 60 * 1000
 #define PER_MEASUREMENT 1 * 1000
 #define PER_CHECK_STATE 1 * 1000
-#define PER_CHECK_OTA 60 * 1000 //24 * 3600 * 1000
+#define PER_CHECK_OTA 24 * 3600 * 1000
 
 //ota
 #define NO_UPDATE 0
