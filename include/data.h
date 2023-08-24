@@ -8,6 +8,7 @@ struct Measurements {
     float power;
     float frequency;
     float energy;
+    float pf;
 
     uint32_t impulses1;
     uint32_t impulses2;

@@ -3,8 +3,8 @@
 
 #include <Arduino.h>
 
-#define VERSION 1
-#define FIRMWARE_VERSION "0.38"
+#define VERSION 4
+#define FIRMWARE_VERSION "0.40"
 #define BRAND_NAME "eMeter"
 
 #define SSID_LEN 32
@@ -54,7 +54,7 @@
 #define OTA_PORT 80
 #define OTA_REQ "/update"
 
-struct Config {
+struct BoardConfig {
     uint8_t version = VERSION;
 
     char ssid[SSID_LEN] = {0}; 
@@ -89,6 +89,6 @@ struct Config {
     uint8_t wifi_phy_mode = 3;
 };
 
-extern void storeConfig(const Config &conf);
-extern bool loadConfig(Config &conf);
+extern void storeConfig(const BoardConfig &conf);
+extern bool loadConfig(BoardConfig &conf);
 #endif

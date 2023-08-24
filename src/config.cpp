@@ -7,7 +7,7 @@
 #include "utils.h"
 #include "porting.h"
 
-void storeConfig(const Config &conf) {
+void storeConfig(const BoardConfig &conf) {
     uint16_t crc = getCRC(conf);
     EEPROM.begin(sizeof(conf) + sizeof(crc));
     EEPROM.put(0, conf);
@@ -22,11 +22,11 @@ void storeConfig(const Config &conf) {
     EEPROM.end();
 }
 
-bool loadConfig(Config &conf) {
+bool loadConfig(BoardConfig &conf) {
     rlog_i("info", "Loading Config...");
     
     uint16_t crc = 0;
-    Config tmp_conf = {};
+    BoardConfig tmp_conf = {};
     EEPROM.begin(sizeof(tmp_conf) + sizeof(crc)); //  4 до 4096 байт. с адреса 0x7b000.
     EEPROM.get(0, tmp_conf);
     EEPROM.get(sizeof(tmp_conf), crc);

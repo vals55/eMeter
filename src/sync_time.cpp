@@ -6,7 +6,7 @@
 #define START_VALID_TIME 1577826000UL   // Wed Jan 01 2020 00:00:00
 #define TIME_FORMAT "%FT%T%z"
 
-bool syncTime(Config &conf) {
+bool syncTime(BoardConfig &conf) {
   
   configTime(conf.tz*3600, 0, conf.ntp_server);
   

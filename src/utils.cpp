@@ -7,7 +7,7 @@
 #include "wifi.h"
 #include "porting.h"
 
-uint16_t getCRC(const Config &conf) {
+uint16_t getCRC(const BoardConfig &conf) {
 	uint8_t *buf = (uint8_t *)&conf;
 	uint16_t crc = 0xffff, poly = 0xa001;
 	uint16_t i = 0;
@@ -29,7 +29,7 @@ uint16_t getCRC(const Config &conf) {
 	return crc;
 }
 
-bool isMQTT(const Config &conf) {
+bool isMQTT(const BoardConfig &conf) {
 #ifndef MQTT_DISABLED
 	return conf.mqtt_host[0];
 #else
@@ -37,7 +37,7 @@ bool isMQTT(const Config &conf) {
 #endif
 }
 
-bool isHA(const Config &conf) {
+bool isHA(const BoardConfig &conf) {
 #ifndef MQTT_DISABLED
 	return isMQTT(conf) && conf.mqtt_auto_discovery;
 #else
@@ -45,7 +45,7 @@ bool isHA(const Config &conf) {
 #endif
 }
 
-bool isDHCP(const Config &conf) {
+bool isDHCP(const BoardConfig &conf) {
 	return conf.ip != 0;
 }
 

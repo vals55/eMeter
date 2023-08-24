@@ -33,7 +33,7 @@ void wifiInfo() {
   rlog_i("info", "[wifiInfo] HOSTNAME: %s", (String)WiFi.getHostname());
 }
 
-void startAP(Config &conf) {
+void startAP(BoardConfig &conf) {
 #ifdef WIFI_DEBUG_INFO
   rlog_i("info", "WiFi debug info enabled");
   wm.setDebugOutput(true);

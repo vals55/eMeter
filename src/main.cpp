@@ -2,12 +2,28 @@
 #include <WiFiManager.h>
 #include <rlog.h>
 #include "sync_time.h"
+#include <PZEM004Tv30.h>
+#include <SoftwareSerial.h>
+
 #include "utils.h"
 #include "config.h"
 #include "data.h"
 #include "wifi.h"
 #include "setup.h"
 #include "calc.h"
+
+#if defined(ESP32)
+    #error "Software Serial is not supported on the ESP32"
+#endif
+
+/* Use software serial for the PZEM
+ * Pin 12 Rx (Connects to the Tx pin on the PZEM)
+ * Pin 13 Tx (Connects to the Rx pin on the PZEM)
+*/
+#if !defined(PZEM_RX_PIN) && !defined(PZEM_TX_PIN)
+#define PZEM_RX_PIN 12
+#define PZEM_TX_PIN 13
+#endif
 
 #define USEOTA
 // enable OTA
@@ -31,9 +47,9 @@
 #define BTN_HOLD_SETUP 5000
 #define BTN_CLICK 200
 
-void sendData();
+void getData();
 
-Config conf;
+BoardConfig conf;
 Measurements data;
 Extra ext;
 #ifdef USEWEB
@@ -41,6 +57,9 @@ uint8_t needOTA = OTA_UPDATE_THE_SAME;
 bool webActive = false;
 String ver;
 #endif
+
+SoftwareSerial pzemSWSerial(PZEM_RX_PIN, PZEM_TX_PIN);
+PZEM004Tv30 pzem(pzemSWSerial);
 
 void flashLED() {
   digitalWrite(SETUP_LED, HIGH);
@@ -73,18 +92,31 @@ void setupBoard() {
   ESP.restart();
 }
 
-void sendData() {
+void getData() {
   
   String curr_time = getCurrentTime();
-  rlog_i("info", "Current time: %s", curr_time.c_str());
-  rlog_i("info", "WiFi RSSI %d", WiFi.RSSI());
-  rlog_i("info", "heap %d", ESP.getFreeHeap()>>10);
-  rlog_i("info", "CPU freq %d", ESP.getCpuFreqMHz());
   
-  data.voltage = (float)random(1000, 200000)/100.0;
-  data.current = (float)random(1000, 200000)/100.f;
-  data.power = (float)random(1000, 200000)/100.f;
-  data.frequency = (float)random(1000, 200000)/100.f;
+  float voltage = pzem.voltage();
+  float current = pzem.current();
+  float power = pzem.power();
+  float energy = pzem.energy();
+  float frequency = pzem.frequency();
+  float pf = pzem.pf();
+
+  data.voltage = isnan(voltage) ? 0.0 : round(pzem.voltage() * 10)/10;
+  data.current = isnan(current) ? 0.0 : round(pzem.current() * 10)/10;
+  data.power = isnan(power) ? 0.0 : round(pzem.power() * 10)/10;
+  data.energy = isnan(energy) ? 0.0 : round(pzem.energy() * 10)/10;
+  data.frequency = isnan(frequency) ? 0.0 : round(pzem.frequency() * 10)/10;
+  data.pf = isnan(pf) ? 0.0 : round(pzem.pf() * 100)/100;
+
+  rlog_i("info", "Address: %04x", pzem.readAddress());
+  rlog_i("info", "Voltage: %.1f", data.voltage);
+  rlog_i("info", "Current: %.1f", data.current);
+  rlog_i("info", "Power: %.1f", data.power);
+  rlog_i("info", "Energy: %.1f", data.energy);
+  rlog_i("info", "Freq: %.1f", data.frequency);
+  rlog_i("info", "pf: %.2f", data.pf);
 
   calcExtraData(data, ext);
 }
@@ -99,8 +131,8 @@ uint8_t isFirmwareReady() {
   if(http.connect(OTA_SERVER, OTA_PORT)) {
     String request("mac=");
     request += WiFi.macAddress();
-    http.printf("GET "OTA_REQ"?%s HTTP/1.1\r\n", request.c_str());
-    http.println("Host: "OTA_SERVER);
+    http.printf("GET " OTA_REQ "?%s HTTP/1.1\r\n", request.c_str());
+    http.println("Host: " OTA_SERVER);
     http.println("User-agent: ESP8266/1.0");
     http.println("Connection: close");
     http.println();
@@ -234,20 +266,20 @@ void loop() {
   if (conf.mqtt_period && millis() - mqttTimer >= conf.mqtt_period * PER_MIN) {
     mqttTimer = millis();
     rlog_i("info", "timer MQTT");
-    //sendData();
+    //getData();
     flashLED();
   }
   // statistic
   if (conf.stat_period && millis() - statisticTimer >= conf.stat_period * PER_SEC) {
     statisticTimer = millis();
-    //sendData();
+    //getData();
     rlog_i("info", "timer Statistic");
     flashLED();
   }
   // measurement
   if (millis() - statisticTimer >= PER_MEASUREMENT) {
     statisticTimer = millis();
-    //sendData();
+    getData();
     flashLED();
   }
   // state

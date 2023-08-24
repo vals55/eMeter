@@ -33,7 +33,7 @@ void wifiSetMode(WiFiMode_t wifi_mode) {
   }
 }
 
-void wifiBegin(Config &conf) {
+void wifiBegin(BoardConfig &conf) {
 
   WiFi.persistent(false);
   WiFi.disconnect();
@@ -104,7 +104,7 @@ String wifiGetMode() {
   return mode;
 }
 
-bool wifiConnect(Config &conf) {
+bool wifiConnect(BoardConfig &conf) {
   uint32_t start_time = millis();
   rlog_i("info", "WIFI: Connecting...");
   int attempts = WIFI_CONNECT_ATTEMPTS;

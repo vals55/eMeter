@@ -3,7 +3,7 @@
 
 #include "config.h"
 
-extern bool syncTime(Config &conf);
+extern bool syncTime(BoardConfig &conf);
 extern String getCurrentTime();
 #endif
 

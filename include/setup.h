@@ -5,7 +5,7 @@
 #include <WiFiManager.h>
 #include "config.h"
 
-void startAP(Config &conf);
+void startAP(BoardConfig &conf);
 
 class LongParameter : public WiFiManagerParameter {
 public:
