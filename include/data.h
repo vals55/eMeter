@@ -2,7 +2,7 @@
 #define __DATA_H
 #include <Arduino.h>
 
-struct Measurements {
+struct Measurements {               //измеренные данные
     float voltage;
     float current;
     float power;
@@ -13,7 +13,7 @@ struct Measurements {
     uint32_t impulses1;
     uint32_t impulses2;
 };
-struct Offset {
+struct Offset {                     //считанные mqtt после загрузки
     float energy;
     uint32_t impulses1;
     uint32_t impulses2;

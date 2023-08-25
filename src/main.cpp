@@ -11,6 +11,8 @@
 #include "wifi.h"
 #include "setup.h"
 #include "calc.h"
+#include "json.h"
+#include "http.h"
 
 #if defined(ESP32)
     #error "Software Serial is not supported on the ESP32"
@@ -52,6 +54,9 @@ void getData();
 BoardConfig conf;
 Measurements data;
 Extra ext;
+Offset offset;
+Calculations calc;
+
 #ifdef USEWEB
 uint8_t needOTA = OTA_UPDATE_THE_SAME;
 bool webActive = false;
@@ -60,6 +65,8 @@ String ver;
 
 SoftwareSerial pzemSWSerial(PZEM_RX_PIN, PZEM_TX_PIN);
 PZEM004Tv30 pzem(pzemSWSerial);
+
+DynamicJsonDocument json_data(JSON_BUFFER);
 
 void flashLED() {
   digitalWrite(SETUP_LED, HIGH);
@@ -272,13 +279,18 @@ void loop() {
   // statistic
   if (conf.stat_period && millis() - statisticTimer >= conf.stat_period * PER_SEC) {
     statisticTimer = millis();
-    //getData();
     rlog_i("info", "timer Statistic");
-    flashLED();
+
+    if(isStat(conf) && (WiFi.status() == WL_CONNECTED)) {
+      getData();
+      getJSONData(conf, data, offset, calc, json_data);
+      sendHTTP(conf, json_data);
+      flashLED();
+    }
   }
   // measurement
-  if (millis() - statisticTimer >= PER_MEASUREMENT) {
-    statisticTimer = millis();
+  if (millis() - measurementTimer >= PER_MEASUREMENT) {
+    measurementTimer = millis();
     getData();
     flashLED();
   }

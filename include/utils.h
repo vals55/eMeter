@@ -15,13 +15,12 @@ inline void strncpy0(char *dest, const char *src, const size_t len) {
 
 extern uint16_t getCRC(const BoardConfig &conf);
 extern bool isMQTT(const BoardConfig &conf);
+extern bool isStat(const BoardConfig &conf);
 extern bool isHA(const BoardConfig &conf);
 extern bool isDHCP(const BoardConfig &conf);
 extern String getDeviceName();
 extern String getAppName();
 extern String getMacAddressHex();
-
-extern void blink_start();
-extern void stop_led();
+extern String getProtocol(const String &url);
 
 #endif

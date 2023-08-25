@@ -37,6 +37,14 @@ bool isMQTT(const BoardConfig &conf) {
 #endif
 }
 
+bool isStat(const BoardConfig &conf) {
+#ifndef STAT_DISABLED
+	return conf.stat_host[0];
+#else
+	return false;
+#endif
+}
+
 bool isHA(const BoardConfig &conf) {
 #ifndef MQTT_DISABLED
 	return isMQTT(conf) && conf.mqtt_auto_discovery;
@@ -64,4 +72,14 @@ String getMacAddressHex() {
 	WiFi.macAddress(baseMac);
 	sprintf(baseMacChr, MAC_STR_HEX, baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
 	return String(baseMacChr);
+}
+
+String getProtocol(const String &url) {
+	String proto = PROTO_HTTP;
+	int index = url.indexOf(':');
+	if (index > 0) {
+		proto = url.substring(0, index);
+		proto.toLowerCase();
+	}
+	return proto;
 }
