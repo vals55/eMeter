@@ -247,7 +247,45 @@ h1{
     <p>кВт-ч</p>
     </span></div>
   <div class='canvas'><canvas id='mycanvas' width='500' height='200'></canvas></div>
-  <script type='text/javascript'> (function(){var line1=new TimeSeries(); var line2=new TimeSeries(); setInterval(function(){line1.append(new Date().getTime(), parseInt(_('voltage').value)); line2.append(new Date().getTime(), parseInt(_('current').value));}, 1000); var smoothie=new SmoothieChart(); smoothie.addTimeSeries(line1); smoothie.addTimeSeries(line2); smoothie.streamTo(document.getElementById('mycanvas'));})();</script>
+  <script>
+    (function() {
+      var voltage = new TimeSeries();
+      var current = new TimeSeries();
+      var power = new TimeSeries();
+      var frequency = new TimeSeries();
+      var pf = new TimeSeries();
+      var top = new TimeSeries();
+      var bottom = new TimeSeries();
+
+      setInterval(function() {
+        var _voltage = parseFloat(_('voltage').innerHTML);
+        var _current = parseFloat(_('current').innerHTML);
+        var _power = parseFloat(_('power').innerHTML);
+        var _frequency = parseFloat(_('frequency').innerHTML);
+        var _pf = parseFloat(_('pf').innerHTML) * 100.0;
+        var _top = Math.ceil(Math.max(_voltage, _power, _current)/100.0)*100.0 + 100.0;
+        var _bottom = -100.0;
+
+        voltage.append(new Date().getTime(), _voltage);
+        current.append(new Date().getTime(), _current);
+        power.append(new Date().getTime(), _power);
+        frequency.append(new Date().getTime(), _frequency);
+        pf.append(new Date().getTime(), _pf);
+        top.append(new Date().getTime(), _top);
+        bottom.append(new Date().getTime(), _bottom);
+      }, 1000);
+      var smoothie = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: '', }, labels: { fillStyle:'rgb(255, 255, 255)' }});
+      
+      smoothie.addTimeSeries(voltage, {strokeStyle:'#ff0000', fillStyle:'', lineWidth:2 });
+      smoothie.addTimeSeries(current, {strokeStyle:'#ff00ff', fillStyle:'', lineWidth:2 });
+      smoothie.addTimeSeries(power, {strokeStyle:'#ffff00', fillStyle:'', lineWidth:2 });
+      smoothie.addTimeSeries(frequency, {strokeStyle:'#00ff00', fillStyle:'', lineWidth:2 });
+      smoothie.addTimeSeries(pf, {strokeStyle:'#0000ff', fillStyle:'', lineWidth:2 });
+      smoothie.addTimeSeries(top, {strokeStyle:'', fillStyle:'', lineWidth:0 });
+      smoothie.addTimeSeries(bottom, {strokeStyle:'', fillStyle:'', lineWidth:0 });
+      smoothie.streamTo(document.getElementById('mycanvas'), 2000);
+    })();   
+  </script>
 </div>
 </body>
 </html>
