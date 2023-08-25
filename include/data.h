@@ -32,11 +32,13 @@ struct Extra {
     float maxcurrent;
     float maxpower;
     float maxfreq;
+    float maxpf;
 
     float minvoltage;
     float mincurrent;
     float minpower;
     float minfreq;
+    float minpf;
 };
 
 #endif

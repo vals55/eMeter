@@ -86,6 +86,8 @@ void sendMessage(String &message) {
   message += String(data.power);
   message += F(", \"inner-frequency\": ");
   message += String(data.frequency);
+  message += F(", \"inner-pf\": ");
+  message += String(data.pf);
   message += F(", \"inner-energy\": ");
   message += String(data.energy);
   message += F(", \"inner-maxvoltage\": ");
@@ -96,6 +98,8 @@ void sendMessage(String &message) {
   message += String(ext.maxpower);
   message += F(", \"inner-maxfreq\": ");
   message += String(ext.maxfreq);
+  message += F(", \"inner-maxpf\": ");
+  message += String(ext.maxpf);
   message += F(", \"inner-minvoltage\": ");
   message += String(ext.minvoltage);
   message += F(", \"inner-mincurrent\": ");
@@ -104,6 +108,8 @@ void sendMessage(String &message) {
   message += String(ext.minpower);
   message += F(", \"inner-minfreq\": ");
   message += String(ext.minfreq);
+  message += F(", \"inner-minpf\": ");
+  message += String(ext.minpf);
   message += F(", \"inner-rssi\": ");
   message += String(WiFi.RSSI());
   message += F(", \"inner-heap\": ");
