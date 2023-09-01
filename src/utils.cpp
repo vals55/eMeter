@@ -83,3 +83,9 @@ String getProtocol(const String &url) {
 	}
 	return proto;
 }
+
+void removeSlash(String &str) {
+	if (str.endsWith(F("/"))) {
+		str.remove(str.length() - 1);
+	}
+}

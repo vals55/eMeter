@@ -15,6 +15,9 @@ void getJSONData(const BoardConfig &conf, const Measurements &data, const Offset
   root[F("energy0")] = data.energy;
   root[F("pf")] = data.pf;
 
+  root[F("counter_t0")] = conf.counter_t0;
+  root[F("counter_t1")] = conf.counter_t1;
+
   root[F("imp01")] = data.impulses1;
   root[F("imp02")] = data.impulses2;
   root[F("imp1")] = data.impulses1 + offset.impulses1;
@@ -23,11 +26,11 @@ void getJSONData(const BoardConfig &conf, const Measurements &data, const Offset
   root[F("voltage1")] = calc.voltage;
   root[F("current1")] = calc.current1;
   root[F("power1")] = calc.power1;
-  root[F("energy1")] = calc.energy1 + offset.energy;
+  root[F("energy1")] = calc.energy1 + offset.energy1;
   root[F("voltage2")] = calc.voltage;
   root[F("current2")] = calc.current2;
   root[F("power2")] = calc.power2;
-  root[F("energy2")] = calc.energy2 + offset.energy;
+  root[F("energy2")] = calc.energy2 + offset.energy2;
 
   root[F("rssi")] = WiFi.RSSI();
   root[F("mac")] = WiFi.macAddress();

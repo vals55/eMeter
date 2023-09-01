@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 #define VERSION 4
-#define FIRMWARE_VERSION "0.40"
+#define FIRMWARE_VERSION "0.41"
 #define BRAND_NAME "eMeter"
 
 #define SSID_LEN 32

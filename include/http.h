@@ -49,7 +49,7 @@ bool postData(String &url, String &payload) {
 
 bool sendHTTP(const BoardConfig &conf, const DynamicJsonDocument &json_data) {
 
-  if (!conf.stat_host[0]) {
+  if (!isStat(conf)) {
     rlog_i("info", "HTTP: skip stat");
     return false;
   }

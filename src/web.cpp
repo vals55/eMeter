@@ -10,6 +10,8 @@
 
 extern Measurements data;
 extern Extra ext;
+extern Calculations calc;
+extern Offset offset;
 extern uint8_t needOTA;
 extern uint8_t secTimer;
 extern String ver;
@@ -88,8 +90,10 @@ void sendMessage(String &message) {
   message += String(data.frequency);
   message += F(", \"inner-pf\": ");
   message += String(data.pf);
-  message += F(", \"inner-energy\": ");
-  message += String(data.energy);
+  message += F(", \"inner-energy1\": ");
+  message += String(calc.energy1+offset.energy1);
+  message += F(", \"inner-energy2\": ");
+  message += String(calc.energy2+offset.energy2);
   message += F(", \"inner-maxvoltage\": ");
   message += String(ext.maxvoltage);
   message += F(", \"inner-maxcurrent\": ");

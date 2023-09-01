@@ -13,6 +13,7 @@
 #include "calc.h"
 #include "json.h"
 #include "http.h"
+#include "mqtt.h"
 
 #if defined(ESP32)
     #error "Software Serial is not supported on the ESP32"
@@ -27,16 +28,14 @@
 #define PZEM_TX_PIN 13
 #endif
 
-#define USEOTA
-// enable OTA
-#ifdef USEOTA
+// #define OTA_DISABLE
+#ifndef OTA_DISABLE
   #include <WiFiUdp.h>
   #include <ArduinoOTA.h>
 #endif
 
-#define USEWEB
-// enable OTA
-#ifdef USEWEB
+// #define WEB_DISABLE
+#ifndef WEB_DISABLE
   #include "web.h"
 #endif
 
@@ -45,11 +44,15 @@
 #endif
 #define BUTTON 15
 #define SETUP_LED 2
+#define CNT1_PIN 5
+#define CNT2_PIN 4
 
 #define BTN_HOLD_SETUP 5000
 #define BTN_CLICK 200
 
 void getData();
+bool recalcTariff1(float energy);
+bool recalcTariff2(float energy);
 
 BoardConfig conf;
 Measurements data;
@@ -57,7 +60,13 @@ Extra ext;
 Offset offset;
 Calculations calc;
 
-#ifdef USEWEB
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
+
+volatile uint32_t imp1;
+volatile uint32_t imp2;
+
+#ifndef WEB_DISABLE
 uint8_t needOTA = OTA_UPDATE_THE_SAME;
 bool webActive = false;
 String ver;
@@ -68,6 +77,163 @@ PZEM004Tv30 pzem(pzemSWSerial);
 
 DynamicJsonDocument json_data(JSON_BUFFER);
 
+IRAM_ATTR void count1() {
+  imp1++;
+}
+
+IRAM_ATTR void count2() {
+  imp2++;
+}
+
+time_t last_call;
+uint32_t last_imp1;
+uint32_t last_imp2;
+
+bool updateConfig(String &topic, String &payload) {
+  bool updated = false;
+  float energy = 0;
+  int period = 0;
+  if (topic.endsWith(F("/set"))) {
+    int endslash = topic.lastIndexOf('/');
+    int prevslash = topic.lastIndexOf('/', endslash - 1);
+    String param = topic.substring(prevslash + 1, endslash);
+
+    rlog_i("info", "MQTT CALLBACK: Parameter %s", param);
+  
+    if (param.equals(F("energy1"))) {
+      energy = payload.toFloat();
+      if (energy > 0) {
+        updated = recalcTariff1(energy);
+        rlog_i("info", "MQTT CALLBACK: new value of T0 energy: %f",  energy);
+      }
+    }
+    if (param.equals(F("energy2"))) {
+      energy = payload.toFloat();
+      if (energy > 0) {
+        updated = recalcTariff2(energy);
+        rlog_i("info", "MQTT CALLBACK: new value of T1 energy: %f",  energy);
+      }
+    }
+    if (param.equals(F("mqtt_period"))) {
+      period = payload.toInt();
+      if (period > 0) {
+        if (period != conf.mqtt_period) {
+          conf.mqtt_period = period;
+          updated = true;
+          rlog_i("info", "MQTT CALLBACK: new value of mqtt_period: %d",  period);
+        }
+      }
+    }
+    if (param.equals(F("stat_period"))) {
+      period = payload.toInt();
+      if (period > 0) {
+        if (period != conf.stat_period) {
+          conf.stat_period = period;
+          updated = true;
+          rlog_i("info", "MQTT CALLBACK: new value of stat_period: %d",  period);
+        }
+      }
+    }
+// after reboot
+  } else if (topic.endsWith(F(STORAGE_T0))) {
+    energy = payload.toFloat();
+    if (energy > 0) {
+      rlog_i("info", "MQTT CALLBACK: get value of T0 energy: %f",  energy);
+      if (offset.energy1 == conf.counter_t0) {
+        recalcTariff1(energy);
+      }
+    }
+  } else if (topic.endsWith(F(STORAGE_T1))) {
+    energy = payload.toFloat();
+    if (energy > 0) {
+      rlog_i("info", "MQTT CALLBACK: get value of T1 energy: %f",  energy);
+      if (offset.energy2 == conf.counter_t1) {
+        recalcTariff2(energy);
+      }
+    }
+  }
+ 
+  return updated;
+}
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  String mTopic = topic;
+  String mPayload;
+  mPayload.reserve(length);
+
+  rlog_i("info", "MQTT CALLBACK: Message arrived to: %s (len=%d)", mTopic.c_str(), length);
+  for (unsigned int i = 0; i < length; i++) {
+    mPayload += (char)payload[i];
+  }
+  updateConfig(mTopic, mPayload);
+  rlog_i("info", "MQTT CALLBACK: Message payload: %s", mPayload.c_str());
+}
+
+bool reconnect() {
+  String client_id = getDeviceName();
+  String topic = conf.mqtt_topic;
+  removeSlash(topic);
+  String subscribe_topic = topic + F(MQTT_ALL_TOPICS);
+  int attempts = MQTT_MAX_TRIES;
+  const char *login = conf.mqtt_login[0] ? conf.mqtt_login : NULL;
+  const char *pass = conf.mqtt_password[0] ? conf.mqtt_password : NULL;
+
+  rlog_i("info", "MQTT Connecting...");
+  while (!mqttClient.connected() && attempts--) {
+    rlog_i("info", "MQTT Attempt #%d from %d", MQTT_MAX_TRIES - attempts + 1, MQTT_MAX_TRIES);
+    if (mqttClient.connect(client_id.c_str(), login, pass)) {
+      rlog_i("info", "MQTT Connected.");
+      mqttClient.subscribe(subscribe_topic.c_str(), MQTT_QOS);
+      rlog_i("info", "MQTT subscribed to: %s", subscribe_topic.c_str());
+      return true;
+    } else {
+      rlog_i("info", "MQTT Connect failed with state %d", mqttClient.state());
+      delay(MQTT_CONNECT_DELAY);
+    }
+  }
+  return mqttClient.connected();
+}
+
+bool recalcTariff1(float energy) {
+  if (offset.energy1 != energy) {
+    rlog_i("info", "RECALC 1: Old Offset.energy1: %f new %d", offset.energy1, energy);
+    offset.energy1 = energy;
+    offset.impulses1 = energy * conf.coeff;
+    data.impulses1 = 0;
+    calc.energy1 = 0;
+    imp1 = 0;
+
+    if (json_data.containsKey("energy1")) {
+        json_data[F("energy1")] = offset.energy1;
+    }
+    if (json_data.containsKey("imp1")) {
+        json_data[F("imp1")] = offset.impulses1;
+    }
+    return true;
+  }
+  return false;
+}
+
+bool recalcTariff2(float energy) {
+  if (offset.energy2 != energy) {
+    rlog_i("info", "RECALC 2: Old Offset.energy2: %f new %d", offset.energy2, energy);
+    offset.energy2 = energy;
+    offset.impulses2 = energy * conf.coeff;
+    data.impulses2 = 0;
+    calc.energy2 = 0;
+    imp2 = 0;
+
+    if (json_data.containsKey("energy2")) {
+        json_data[F("energy2")] = offset.energy2;
+    }
+    if (json_data.containsKey("imp2")) {
+        json_data[F("imp2")] = offset.impulses2;
+    }
+    return true;
+  }
+  return false;
+}
+
 void flashLED() {
   digitalWrite(SETUP_LED, HIGH);
   delay(20);
@@ -77,7 +243,7 @@ void flashLED() {
 void setupBoard() {
   
   digitalWrite(SETUP_LED, HIGH);
-#ifdef USEWEB
+#ifndef WEB_DISABLE
     if(webActive) {
       webActive = stopWeb();
     }
@@ -101,7 +267,7 @@ void setupBoard() {
 
 void getData() {
   
-  String curr_time = getCurrentTime();
+  // String curr_time = getCurrentTime();
   
   float voltage = pzem.voltage();
   float current = pzem.current();
@@ -117,18 +283,35 @@ void getData() {
   data.frequency = isnan(frequency) ? 0.0 : round(frequency * 10)/10;
   data.pf = isnan(pf) ? 0.0 : round(pf * 100)/100;
 
-  rlog_i("info", "Address: %04x", pzem.readAddress());
-  rlog_i("info", "Voltage: %.1f", data.voltage);
-  rlog_i("info", "Current: %.1f", data.current);
-  rlog_i("info", "Power: %.1f", data.power);
-  rlog_i("info", "Energy: %.1f", data.energy);
-  rlog_i("info", "Freq: %.1f", data.frequency);
-  rlog_i("info", "pf: %.2f", data.pf);
+  // rlog_i("info", "Address: %04x", pzem.readAddress());
+  // rlog_i("info", "Voltage: %.1f", data.voltage);
+  // rlog_i("info", "Current: %.1f", data.current);
+  // rlog_i("info", "Power: %.1f", data.power);
+  // rlog_i("info", "Energy: %.1f", data.energy);
+  // rlog_i("info", "Freq: %.1f", data.frequency);
+  // rlog_i("info", "pf: %.2f", data.pf);
 
   calcExtraData(data, ext);
+
+  time_t now = time(nullptr);
+  long period = now - last_call;
+  if (period < 60) {
+    return;
+  }
+  last_call = now;
+
+  calc.power1 = (imp1 - last_imp1) * 1000 * period / conf.coeff;
+  last_imp1 = imp1;
+  calc.power2 = (imp2 - last_imp2) * 1000 * period / conf.coeff;
+  last_imp2 = imp2;
+  calc.voltage = data.voltage == 0 ? 220 : data.voltage;
+  calc.current1 = calc.power1 / calc.voltage;
+  calc.energy1 =+ calc.power1;
+  calc.current2 = calc.power2 / calc.voltage;
+  calc.energy2 =+ calc.power2;
 }
 
-#ifdef USEWEB
+#ifndef WEB_DISABLE
 uint8_t isFirmwareReady() {
   
   WiFiClient http;
@@ -163,17 +346,22 @@ uint8_t isFirmwareReady() {
     rlog_i("info", "OTA need");
     return OTA_UPDATE_READY;
   }
-#endif  
   
   rlog_i("info", "firmware=%s vs sketch=%s", ret.c_str(), ESP.getSketchMD5().c_str());
   return true;
 }
+#endif  
 
 void setup() {
   bool success = false;
 
   pinMode(SETUP_LED, OUTPUT);
   digitalWrite(SETUP_LED, LOW);
+
+  pinMode (CNT1_PIN, INPUT_PULLUP);
+  attachInterrupt(CNT1_PIN, count1, FALLING);
+  pinMode (CNT2_PIN, INPUT_PULLUP);
+  attachInterrupt(CNT2_PIN, count2, FALLING);
 
   Serial.begin(115200);
   Serial.println();
@@ -208,11 +396,25 @@ void setup() {
   success = syncTime(conf);
   rlog_i("info", "sync_ntp_time = %d", success);
   
-  #ifdef USEOTA
+  if (offset.energy1 == 0) {
+    recalcTariff1(conf.counter_t0);
+  }
+  if (offset.energy2 == 0) {
+    recalcTariff2(conf.counter_t1);
+  }
+
+  rlog_i("info", "MQTT begin");
+  espClient.setTimeout(MQTT_SOCKET_TIMEOUT * 1000);
+  mqttClient.setBufferSize(MQTT_MAX_PACKET_SIZE);
+  mqttClient.setServer(conf.mqtt_host, conf.mqtt_port);
+  mqttClient.setSocketTimeout(MQTT_SOCKET_TIMEOUT);
+  mqttClient.setCallback(callback);
+
+  #ifndef OTA_DISABLE
     ArduinoOTA.begin();
   #endif
   
-  #ifdef USEWEB
+  #ifndef WEB_DISABLE
     webActive = startWeb();
   #endif
 }
@@ -225,18 +427,30 @@ uint32_t measurementTimer = 0;
 uint32_t stateTimer = 0;
 uint32_t otaTimer = 0;
 uint32_t secTimer = 0;
+uint32_t lastReconnectAttempt = 0;
 
 void loop() {
   bool success = false;
 
-  #ifdef USEOTA
+  #ifndef OTA_DISABLE
   ArduinoOTA.handle();
   #endif
   
   if((WiFi.status() == WL_CONNECTED)) {
-  #ifdef USEWEB
+  #ifndef WEB_DISABLE
     handleWeb();
   #endif
+    if (!mqttClient.connected()) {
+      long now = millis();
+      if (now - lastReconnectAttempt > MQTT_RECONNECT_GAP) {
+        lastReconnectAttempt = now;
+        if (reconnect()) {
+          lastReconnectAttempt = 0;
+        }
+      }
+    } else {
+      mqttClient.loop();
+    }
   }
 
   //button
@@ -253,7 +467,7 @@ void loop() {
   }
   if (!btnState && flag && millis() - btnTimer > BTN_CLICK) {
     btnTimer = millis();
-#ifdef USEWEB
+#ifndef WEB_DISABLE
     if(webActive) {
       webActive = stopWeb();
     } else {
@@ -270,14 +484,26 @@ void loop() {
   
   // timers
   // mqtt
-  if (conf.mqtt_period && millis() - mqttTimer >= conf.mqtt_period * PER_MIN) {
+#define MQTT_ENABLE 1
+  if (MQTT_ENABLE && conf.mqtt_period && millis() - mqttTimer >= conf.mqtt_period * PER_MIN) {
     mqttTimer = millis();
     rlog_i("info", "timer MQTT");
-    //getData();
-    flashLED();
+    
+    if(isMQTT(conf) && (WiFi.status() == WL_CONNECTED)) {
+      getData();
+      if (reconnect()) {
+        getJSONData(conf, data, offset, calc, json_data);
+        String topic = conf.mqtt_topic;
+        removeSlash(topic);
+        publishStorage(mqttClient, topic, calc.energy1+offset.energy1, calc.energy2+offset.energy2);
+        publishData(mqttClient, topic, json_data, conf.mqtt_auto_discovery);
+      }
+      flashLED();
+    }
   }
   // statistic
-  if (conf.stat_period && millis() - statisticTimer >= conf.stat_period * PER_SEC) {
+#define STAT_ENABLE 0
+  if (STAT_ENABLE && conf.stat_period && millis() - statisticTimer >= conf.stat_period * PER_SEC) {
     statisticTimer = millis();
     rlog_i("info", "timer Statistic");
 
@@ -294,15 +520,16 @@ void loop() {
     getData();
     flashLED();
   }
-  // state
+  // check own state
   if (millis() - stateTimer >= PER_CHECK_STATE) {
     stateTimer = millis();
-    flashLED();
+    data.impulses1 = imp1;
+    data.impulses2 = imp2;
   }
   // OTA check firmware
   if (millis() - otaTimer >= PER_CHECK_OTA) {
     otaTimer = millis();
-#ifdef USEWEB
+#ifndef WEB_DISABLE
     if(webActive) {
       webActive = stopWeb();
       needOTA = isFirmwareReady();
@@ -317,7 +544,7 @@ void loop() {
   }
   // OTA processing one sec timer
   if (millis() - secTimer >= 5 * PER_SEC) {
-#ifdef USEWEB
+#ifndef WEB_DISABLE
     if(needOTA == OTA_UPDATE_FINISH) {
       ESP.restart();
     }
@@ -326,6 +553,7 @@ void loop() {
       needOTA = OTA_UPDATE_FINISH;
     }
     secTimer = millis();
-  }
 #endif
+  }
+  delay(100);
 }

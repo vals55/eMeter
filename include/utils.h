@@ -22,5 +22,6 @@ extern String getDeviceName();
 extern String getAppName();
 extern String getMacAddressHex();
 extern String getProtocol(const String &url);
+extern void removeSlash(String &str);
 
 #endif

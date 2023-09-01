@@ -35,6 +35,8 @@ CREATE TABLE `emeter_stat` (
   `frequency` double DEFAULT NULL,
   `energy0` double DEFAULT NULL,
   `pf` double DEFAULT NULL,
+  `counter_t0` double DEFAULT NULL,
+  `counter_t1` double DEFAULT NULL,
   `imp01` int(11) DEFAULT NULL,
   `imp02` int(11) DEFAULT NULL,
   `imp1` int(11) DEFAULT NULL,
@@ -59,15 +61,6 @@ CREATE TABLE `emeter_stat` (
   `timestamp` timestamp NULL DEFAULT NULL,
   `stamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Дамп данных таблицы `emeter_stat`
---
-
-INSERT INTO `emeter_stat` (`id`, `voltage0`, `current0`, `power0`, `frequency`, `energy0`, `pf`, `imp01`, `imp02`, `imp1`, `imp2`, `voltage1`, `current1`, `power1`, `energy1`, `voltage2`, `current2`, `power2`, `energy2`, `rssi`, `mac`, `ip`, `ver`, `ver_esp`, `chip_id`, `freemem`, `mqtt_period`, `stat_period`, `timestamp`, `stamp`) VALUES
-(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 220, 0, 0, 0, 220, 0, 0, 0, -65, 'C4:5B:BE:42:CD:B2', '192.168.254.109', 1, '0.40', 4378034, 31360, 10, 60, '2023-08-25 13:54:33', '2023-08-25 16:54:33'),
-(2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 220, 0, 0, 0, 220, 0, 0, 0, -65, 'C4:5B:BE:42:CD:B2', '192.168.254.109', 1, '0.40', 4378034, 32320, 10, 60, '2023-08-25 13:55:33', '2023-08-25 16:55:33'),
-(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 220, 0, 0, 0, 220, 0, 0, 0, -63, 'C4:5B:BE:42:CD:B2', '192.168.254.109', 1, '0.40', 4378034, 32136, 10, 60, '2023-08-25 14:16:04', '2023-08-25 17:16:04');
 
 --
 -- Индексы сохранённых таблиц

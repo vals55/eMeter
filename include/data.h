@@ -14,7 +14,8 @@ struct Measurements {               //измеренные данные
     uint32_t impulses2;
 };
 struct Offset {                     //считанные mqtt после загрузки
-    float energy;
+    float energy1;
+    float energy2;
     uint32_t impulses1;
     uint32_t impulses2;
 };

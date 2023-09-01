@@ -129,7 +129,7 @@ h1{
     background-color:#ddd;
 }
 .cnt{
-    margin-right:10px;
+    margin:10px 10px 0 0;
 }
 .info{
     width:100%;
@@ -239,14 +239,17 @@ h1{
       <p class='f' id='minpf'></p>
     </div>
   </div>
-  <div class='tbl'><span class='cnt'>
-    <p >Показания счетчика электроэнергии</p>
-    </span><span class='cnt'>
-    <p class='e' id='energy'></p>
-    </span><span class='cnt'>
-    <p>кВт-ч</p>
-    </span></div>
-  <div class='canvas'><canvas id='mycanvas' width='500' height='200'></canvas></div>
+  <div class='tbl'>
+    <span class='cnt'>Показания счетчика электроэнергии Т0:</span>
+    <span class='cnt' id='energy1'></span>
+    <span class='cnt'>кВт-ч</span>
+  </div>
+  <div class='tbl'>
+    <span class='cnt'>Показания счетчика электроэнергии Т1:</span>
+    <span class='cnt' id='energy2'></span>
+    <span class='cnt'>кВт-ч</span>
+  </div>
+  <div style='padding-top:40px;' class='canvas'><canvas id='mycanvas' width='500' height='200'></canvas></div>
   <script>
     (function() {
       var voltage = new TimeSeries();
