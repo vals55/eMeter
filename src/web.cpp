@@ -8,6 +8,8 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 
+#define STOP_STATE_DEBUG
+
 extern Measurements data;
 extern Extra ext;
 extern Calculations calc;
@@ -67,7 +69,7 @@ void startOTA() {
     case HTTP_UPDATE_NO_UPDATES:
       rlog_i("info", "HTTP_UPDATE_NO_UPDATES");
       rlog_i("info", "Your code is up to date!");
-      needOTA = NO_UPDATE;
+      needOTA = NO_UPDATES;
       delay(10000); 
       break;
 
@@ -137,12 +139,15 @@ void sendMessage(String &message) {
   buffer = needOTA > 1 ? "\"Обновить\"" : "\"Назад\"";
   message += String(buffer);
   message += F("}");
+#ifndef STOP_STATE_DEBUG
   rlog_i("info", "WEB message %s", message.c_str());
+#endif  
 }
 
 void handleStates() {
-
+#ifndef STOP_STATE_DEBUG
   rlog_i("info", "WEB /states request");
+#endif
   String message;
   message.reserve(200);
   sendMessage(message);

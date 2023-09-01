@@ -43,7 +43,7 @@
 #define PER_CHECK_OTA 24 * 3600 * 1000
 
 //ota
-#define NO_UPDATE 0
+#define NO_UPDATES 0
 #define OTA_UPDATE_THE_SAME 1
 #define OTA_UPDATE_READY 2
 #define OTA_UPDATE_START 3

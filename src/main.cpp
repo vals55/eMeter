@@ -332,19 +332,20 @@ uint8_t isFirmwareReady() {
     ret = ret.substring(ind_md5 + 4);
   }
   http.stop();
-
+  
+  rlog_i("info", "OTA ver=%s md5=%s", ver, ret.c_str());
   if(ret == "-1") {
     rlog_i("info", "OTA not found");
-    return NO_UPDATE;
+    return NO_UPDATES;
   } else if (ret == ESP.getSketchMD5()) {
-    rlog_i("info", "OTA not need");
+    rlog_i("info", "OTA not need md5 the same!");
     return OTA_UPDATE_THE_SAME;
-  } else if (ver != FIRMWARE_VERSION) {
-    rlog_i("info", "OTA need");
+  } else if (ver.toFloat() > String(FIRMWARE_VERSION).toFloat()) {
+    rlog_i("info", "OTA need ver=%s", ver);
     return OTA_UPDATE_READY;
   } else {
-    rlog_i("info", "OTA need");
-    return OTA_UPDATE_READY;
+    rlog_i("info", "OTA no updates");
+    return NO_UPDATES;
   }
   
   rlog_i("info", "firmware=%s vs sketch=%s", ret.c_str(), ESP.getSketchMD5().c_str());
@@ -415,6 +416,7 @@ void setup() {
   #endif
   
   #ifndef WEB_DISABLE
+    needOTA = isFirmwareReady();
     webActive = startWeb();
   #endif
 }
