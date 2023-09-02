@@ -5,6 +5,7 @@
 
 #define MQTT_PARAM_COUNT 8
 #define CHANNEL_COUNT 2
+#define NONE -1
 
 static const char s_sensor[] PROGMEM    = "sensor";
 static const char s_number[] PROGMEM    = "number";
