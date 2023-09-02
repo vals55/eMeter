@@ -1,6 +1,7 @@
 #ifndef __DATA_H
 #define __DATA_H
 #include <Arduino.h>
+#include "config.h"
 
 struct Measurements {               //измеренные данные
     float voltage;

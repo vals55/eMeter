@@ -1,12 +1,5 @@
 #include "mqtt.h"
 
-#define MQTT_CHUNK_SIZE 128
-#define PUBLISH_MODE_BIG 0
-#define PUBLISH_MODE_CHUNKED 1
-#define PUBLISH_MODE_SIMPLE 2
-#define DEFAULT_PUBLISH_MODE PUBLISH_MODE_BIG
-
-
 void publish_chunked(PubSubClient &mqtt_client, String &topic, String &payload, unsigned int chunk_size) {
   rlog_i("info", "MQTT: Publish free memory: %d payload len: %d topic: %s", ESP.getFreeHeap(), payload.length(), MQTT_DEFAULT_TOPIC_PREFIX);
 

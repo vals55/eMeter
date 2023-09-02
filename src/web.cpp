@@ -10,10 +10,11 @@
 
 #define STOP_STATE_DEBUG
 
-extern Measurements data;
-extern Extra ext;
-extern Calculations calc;
-extern Offset offset;
+// extern Measurements data;
+// extern Extra ext;
+// extern Calculations calc;
+// extern Offset offset;
+extern Data data;
 extern uint8_t needOTA;
 extern uint8_t secTimer;
 extern String ver;
@@ -83,39 +84,39 @@ void startOTA() {
 void sendMessage(String &message) {
 
   message = F("{\"inner-voltage\": ");
-  message += String(data.voltage);
+  message += String(data.data.voltage);
   message += F(", \"inner-current\": ");
-  message += String(data.current);
+  message += String(data.data.current);
   message += F(", \"inner-power\": ");
-  message += String(data.power);
+  message += String(data.data.power);
   message += F(", \"inner-frequency\": ");
-  message += String(data.frequency);
+  message += String(data.data.frequency);
   message += F(", \"inner-pf\": ");
-  message += String(data.pf);
+  message += String(data.data.pf);
   message += F(", \"inner-energy1\": ");
-  message += String(calc.energy1+offset.energy1);
+  message += String(data.calc.energy1+data.offset.energy1);
   message += F(", \"inner-energy2\": ");
-  message += String(calc.energy2+offset.energy2);
+  message += String(data.calc.energy2+data.offset.energy2);
   message += F(", \"inner-maxvoltage\": ");
-  message += String(ext.maxvoltage);
+  message += String(data.ext.maxvoltage);
   message += F(", \"inner-maxcurrent\": ");
-  message += String(ext.maxcurrent);
+  message += String(data.ext.maxcurrent);
   message += F(", \"inner-maxpower\": ");
-  message += String(ext.maxpower);
+  message += String(data.ext.maxpower);
   message += F(", \"inner-maxfreq\": ");
-  message += String(ext.maxfreq);
+  message += String(data.ext.maxfreq);
   message += F(", \"inner-maxpf\": ");
-  message += String(ext.maxpf);
+  message += String(data.ext.maxpf);
   message += F(", \"inner-minvoltage\": ");
-  message += String(ext.minvoltage);
+  message += String(data.ext.minvoltage);
   message += F(", \"inner-mincurrent\": ");
-  message += String(ext.mincurrent);
+  message += String(data.ext.mincurrent);
   message += F(", \"inner-minpower\": ");
-  message += String(ext.minpower);
+  message += String(data.ext.minpower);
   message += F(", \"inner-minfreq\": ");
-  message += String(ext.minfreq);
+  message += String(data.ext.minfreq);
   message += F(", \"inner-minpf\": ");
-  message += String(ext.minpf);
+  message += String(data.ext.minpf);
   message += F(", \"inner-rssi\": ");
   message += String(WiFi.RSSI());
   message += F(", \"inner-heap\": ");

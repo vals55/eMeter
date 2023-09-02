@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 #define MQTT_PARAM_COUNT 8
-#define HA_CHANNEL_COUNT 2
+#define CHANNEL_COUNT 2
 
 static const char s_sensor[] PROGMEM    = "sensor";
 static const char s_number[] PROGMEM    = "number";
@@ -50,6 +50,7 @@ static const char u_min[] PROGMEM       = "min";
 static const char n_stat_per[] PROGMEM  = "Statistics send period";
 static const char u_sec[] PROGMEM       = "s";
 static const char n_imp[] PROGMEM       = "Impulses";
+static const char n_ip[] PROGMEM        = "IP Address";
 // ids
 static const char i_voltage[] PROGMEM   = "voltage";
 static const char i_current[] PROGMEM   = "current";
@@ -69,6 +70,7 @@ static const char i_energy0[] PROGMEM   = "energy0";
 static const char i_imp0[] PROGMEM      = "imp0";
 static const char i_current0[] PROGMEM  = "current0";
 static const char i_power0[] PROGMEM    = "power00";
+static const char i_ip[] PROGMEM        = "ip";
 // category
 static const char cat_diag[] PROGMEM = "diagnostic";
 static const char cat_conf[] PROGMEM = "config";
@@ -83,14 +85,15 @@ static const char *const GENERAL_ENTITIES[][MQTT_PARAM_COUNT] PROGMEM = {
     {s_sensor,  n_power,    i_power,    c_measurement,  d_power,     u_power,    "",        icon},
     {s_sensor,  n_freq,     i_freq,     c_measurement,  d_freq,      u_freq,     "",        icon},
     {s_sensor,  n_pf,       i_pf,       c_measurement,  d_pf,        u_pf,       "",        icon},
-    {s_sensor,  n_rssi,     i_rssi,     c_measurement,  d_rssi,      u_rssi,     cat_diag,  icon},
     {s_sensor,  n_time,     i_time,     "",             d_timestamp, "",         cat_diag,  icon},
-    {s_sensor,  n_mac,      i_mac,      "",             "",          "",         cat_diag,  ""},
-    {s_sensor,  n_chip,     i_chip,     "",             "",          "",         cat_diag,  ""},
     {s_float,   n_t0,       i_t0,       "",             "",          u_t0,       cat_conf,  icon},
     {s_float,   n_t1,       i_t1,       "",             "",          u_t1,       cat_conf,  icon},
     {s_number,  n_mqtt_per, i_mqtt_per, "",             d_duration,  u_min,      cat_conf,  icon},
-    {s_number,  n_stat_per, i_stat_per, "",             d_duration,  u_sec,      cat_conf,  icon}
+    {s_number,  n_stat_per, i_stat_per, "",             d_duration,  u_sec,      cat_conf,  icon},
+    {s_sensor,  n_rssi,     i_rssi,     c_measurement,  d_rssi,      u_rssi,     cat_diag,  icon},
+    {s_sensor,  n_ip,       i_ip,       "",             "",          "",         cat_diag,  icon},
+    {s_sensor,  n_mac,      i_mac,      "",             "",          "",         cat_diag,  ""},
+    {s_sensor,  n_chip,     i_chip,     "",             "",          "",         cat_diag,  ""}
 };
 
 static const char *const CHANNEL_ENTITIES[][MQTT_PARAM_COUNT] PROGMEM = {
@@ -104,10 +107,10 @@ static const char *const CHANNEL_ENTITIES[][MQTT_PARAM_COUNT] PROGMEM = {
 
 static const char s_energy_t0[] PROGMEM = "Energy T0";
 static const char s_energy_t1[] PROGMEM = "Energy T1";
-static const char *const CHANNEL_NAMES[HA_CHANNEL_COUNT] PROGMEM = {s_energy_t0, s_energy_t1};
+static const char *const CHANNEL_NAMES[CHANNEL_COUNT] PROGMEM = {s_energy_t0, s_energy_t1};
 
 static const char s_classic[] PROGMEM   = "Classic";
-static const char s_mod[] PROGMEM       = "serial";
+static const char s_mod[] PROGMEM       = "Lite";
 static const char *const MODEL_NAMES[] PROGMEM = {s_classic, s_mod};
 
 #endif

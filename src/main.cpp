@@ -55,11 +55,11 @@ void getData();
 bool recalcTariff1(float energy);
 bool recalcTariff2(float energy);
 
-BoardConfig conf;
-Measurements data;
-Extra ext;
-Offset offset;
-Calculations calc;
+// BoardConfig conf;
+// Measurements data;
+// Extra ext;
+// Offset offset;
+// Calculations calc;
 
 Data data;
 
@@ -120,8 +120,8 @@ bool updateConfig(String &topic, String &payload) {
     if (param.equals(F("mqtt_period"))) {
       period = payload.toInt();
       if (period > 0) {
-        if (period != conf.mqtt_period) {
-          conf.mqtt_period = period;
+        if (period != data.conf.mqtt_period) {
+          data.conf.mqtt_period = period;
           updated = true;
           rlog_i("info", "MQTT CALLBACK: new value of mqtt_period: %d",  period);
         }
@@ -130,8 +130,8 @@ bool updateConfig(String &topic, String &payload) {
     if (param.equals(F("stat_period"))) {
       period = payload.toInt();
       if (period > 0) {
-        if (period != conf.stat_period) {
-          conf.stat_period = period;
+        if (period != data.conf.stat_period) {
+          data.conf.stat_period = period;
           updated = true;
           rlog_i("info", "MQTT CALLBACK: new value of stat_period: %d",  period);
         }
@@ -142,7 +142,7 @@ bool updateConfig(String &topic, String &payload) {
     energy = payload.toFloat();
     if (energy > 0) {
       rlog_i("info", "MQTT CALLBACK: get value of T0 energy: %f",  energy);
-      if (offset.energy1 == conf.counter_t0) {
+      if (data.offset.energy1 == data.conf.counter_t0) {
         recalcTariff1(energy);
       }
     }
@@ -150,7 +150,7 @@ bool updateConfig(String &topic, String &payload) {
     energy = payload.toFloat();
     if (energy > 0) {
       rlog_i("info", "MQTT CALLBACK: get value of T1 energy: %f",  energy);
-      if (offset.energy2 == conf.counter_t1) {
+      if (data.offset.energy2 == data.conf.counter_t1) {
         recalcTariff2(energy);
       }
     }
@@ -174,12 +174,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 bool reconnect() {
   String client_id = getDeviceName();
-  String topic = conf.mqtt_topic;
+  String topic = data.conf.mqtt_topic;
   removeSlash(topic);
   String subscribe_topic = topic + F(MQTT_ALL_TOPICS);
   int attempts = MQTT_MAX_TRIES;
-  const char *login = conf.mqtt_login[0] ? conf.mqtt_login : NULL;
-  const char *pass = conf.mqtt_password[0] ? conf.mqtt_password : NULL;
+  const char *login = data.conf.mqtt_login[0] ? data.conf.mqtt_login : NULL;
+  const char *pass = data.conf.mqtt_password[0] ? data.conf.mqtt_password : NULL;
 
   rlog_i("info", "MQTT Connecting...");
   while (!mqttClient.connected() && attempts--) {
@@ -198,19 +198,19 @@ bool reconnect() {
 }
 
 bool recalcTariff1(float energy) {
-  if (offset.energy1 != energy) {
-    rlog_i("info", "RECALC 1: Old Offset.energy1: %f new %d", offset.energy1, energy);
-    offset.energy1 = energy;
-    offset.impulses1 = energy * conf.coeff;
-    data.impulses1 = 0;
-    calc.energy1 = 0;
+  if (data.offset.energy1 != energy) {
+    rlog_i("info", "RECALC 1: Old Offset.energy1: %f new %d", data.offset.energy1, energy);
+    data.offset.energy1 = energy;
+    data.offset.impulses1 = energy * data.conf.coeff;
+    data.data.impulses1 = 0;
+    data.calc.energy1 = 0;
     imp1 = 0;
 
     if (json_data.containsKey("energy1")) {
-        json_data[F("energy1")] = offset.energy1;
+        json_data[F("energy1")] = data.offset.energy1;
     }
     if (json_data.containsKey("imp1")) {
-        json_data[F("imp1")] = offset.impulses1;
+        json_data[F("imp1")] = data.offset.impulses1;
     }
     return true;
   }
@@ -218,19 +218,19 @@ bool recalcTariff1(float energy) {
 }
 
 bool recalcTariff2(float energy) {
-  if (offset.energy2 != energy) {
-    rlog_i("info", "RECALC 2: Old Offset.energy2: %f new %d", offset.energy2, energy);
-    offset.energy2 = energy;
-    offset.impulses2 = energy * conf.coeff;
-    data.impulses2 = 0;
-    calc.energy2 = 0;
+  if (data.offset.energy2 != energy) {
+    rlog_i("info", "RECALC 2: Old Offset.energy2: %f new %d", data.offset.energy2, energy);
+    data.offset.energy2 = energy;
+    data.offset.impulses2 = energy * data.conf.coeff;
+    data.data.impulses2 = 0;
+    data.calc.energy2 = 0;
     imp2 = 0;
 
     if (json_data.containsKey("energy2")) {
-        json_data[F("energy2")] = offset.energy2;
+        json_data[F("energy2")] = data.offset.energy2;
     }
     if (json_data.containsKey("imp2")) {
-        json_data[F("imp2")] = offset.impulses2;
+        json_data[F("imp2")] = data.offset.impulses2;
     }
     return true;
   }
@@ -258,7 +258,7 @@ void setupBoard() {
   wifiSetMode(WIFI_AP_STA);
   delay(1000);
 
-  startAP(conf);
+  startAP(data.conf);
 
   wifiShutdown();
 
@@ -279,12 +279,12 @@ void getData() {
   float frequency = pzem.frequency();
   float pf = pzem.pf();
 
-  data.voltage = isnan(voltage) ? 0.0 : round(voltage * 10)/10;
-  data.current = isnan(current) ? 0.0 : round(current * 10)/10;
-  data.power = isnan(power) ? 0.0 : round(power * 10)/10;
-  data.energy = isnan(energy) ? 0.0 : round(energy * 10)/10;
-  data.frequency = isnan(frequency) ? 0.0 : round(frequency * 10)/10;
-  data.pf = isnan(pf) ? 0.0 : round(pf * 100)/100;
+  data.data.voltage = isnan(voltage) ? 0.0 : round(voltage * 10)/10;
+  data.data.current = isnan(current) ? 0.0 : round(current * 10)/10;
+  data.data.power = isnan(power) ? 0.0 : round(power * 10)/10;
+  data.data.energy = isnan(energy) ? 0.0 : round(energy * 10)/10;
+  data.data.frequency = isnan(frequency) ? 0.0 : round(frequency * 10)/10;
+  data.data.pf = isnan(pf) ? 0.0 : round(pf * 100)/100;
 
   // rlog_i("info", "Address: %04x", pzem.readAddress());
   // rlog_i("info", "Voltage: %.1f", data.voltage);
@@ -294,7 +294,10 @@ void getData() {
   // rlog_i("info", "Freq: %.1f", data.frequency);
   // rlog_i("info", "pf: %.2f", data.pf);
 
-  calcExtraData(data, ext);
+  calcExtraData(data.data, data.ext);
+
+  data.calc.energy1 = imp1 / data.conf.coeff;
+  data.calc.energy2 = imp2  / data.conf.coeff;
 
   time_t now = time(nullptr);
   long period = now - last_call;
@@ -303,15 +306,13 @@ void getData() {
   }
   last_call = now;
 
-  calc.power1 = (imp1 - last_imp1) * 1000 * period / conf.coeff;
+  data.calc.power1 = (imp1 - last_imp1) * 1000 * period / data.conf.coeff;
   last_imp1 = imp1;
-  calc.power2 = (imp2 - last_imp2) * 1000 * period / conf.coeff;
+  data.calc.power2 = (imp2 - last_imp2) * 1000 * period / data.conf.coeff;
   last_imp2 = imp2;
-  calc.voltage = data.voltage == 0 ? 220 : data.voltage;
-  calc.current1 = calc.power1 / calc.voltage;
-  calc.energy1 = imp1 / conf.coeff;
-  calc.current2 = calc.power2 / calc.voltage;
-  calc.energy2 = imp2  / conf.coeff;
+  data.calc.voltage = data.data.voltage == 0 ? 220 : data.data.voltage;
+  data.calc.current1 = data.calc.power1 / data.calc.voltage;
+  data.calc.current2 = data.calc.power2 / data.calc.voltage;
 }
 
 #ifndef WEB_DISABLE
@@ -371,14 +372,14 @@ void setup() {
   Serial.println();
   rlog_i("info", "Boot ok");
   
-  success = loadConfig(conf);
+  success = loadConfig(data.conf);
   rlog_i("info", "loadConfig = %d", success);
   if (!success) {
     rlog_i("info", "Setup board entering");
     setupBoard();
   }
  
-  success = wifiConnect(conf);
+  success = wifiConnect(data.conf);
   rlog_i("info", "WiFi connect = %d", success);
 
   if (!success) {
@@ -397,20 +398,20 @@ void setup() {
   // wm.erase();
 #endif
 
-  success = syncTime(conf);
+  success = syncTime(data.conf);
   rlog_i("info", "sync_ntp_time = %d", success);
   
-  if (offset.energy1 == 0) {
-    recalcTariff1(conf.counter_t0);
+  if (data.offset.energy1 == 0) {
+    recalcTariff1(data.conf.counter_t0);
   }
-  if (offset.energy2 == 0) {
-    recalcTariff2(conf.counter_t1);
+  if (data.offset.energy2 == 0) {
+    recalcTariff2(data.conf.counter_t1);
   }
 
   rlog_i("info", "MQTT begin");
   espClient.setTimeout(MQTT_SOCKET_TIMEOUT * 1000);
   mqttClient.setBufferSize(MQTT_MAX_PACKET_SIZE);
-  mqttClient.setServer(conf.mqtt_host, conf.mqtt_port);
+  mqttClient.setServer(data.conf.mqtt_host, data.conf.mqtt_port);
   mqttClient.setSocketTimeout(MQTT_SOCKET_TIMEOUT);
   mqttClient.setCallback(callback);
 
@@ -490,32 +491,32 @@ void loop() {
   // timers
   // mqtt
 #define MQTT_ENABLE 1
-  if (MQTT_ENABLE && conf.mqtt_period && millis() - mqttTimer >= conf.mqtt_period * PERIOD_MIN) {
+  if (MQTT_ENABLE && data.conf.mqtt_period && millis() - mqttTimer >= data.conf.mqtt_period * PERIOD_MIN) {
     mqttTimer = millis();
     rlog_i("info", "timer MQTT");
     
-    if(isMQTT(conf) && (WiFi.status() == WL_CONNECTED)) {
+    if(isMQTT(data.conf) && (WiFi.status() == WL_CONNECTED)) {
       getData();
       if (reconnect()) {
-        getJSONData(conf, data, offset, calc, json_data);
-        String topic = conf.mqtt_topic;
+        getJSONData(data, json_data);
+        String topic = data.conf.mqtt_topic;
         removeSlash(topic);
-        publishStorage(mqttClient, topic, calc.energy1+offset.energy1, calc.energy2+offset.energy2);
-        publishData(mqttClient, topic, json_data, conf.mqtt_auto_discovery);
+        publishStorage(mqttClient, topic, data.calc.energy1+data.offset.energy1, data.calc.energy2+data.offset.energy2);
+        publishData(mqttClient, topic, json_data, data.conf.mqtt_auto_discovery);
       }
       flashLED();
     }
   }
   // statistic
 #define STAT_ENABLE 0
-  if (STAT_ENABLE && conf.stat_period && millis() - statisticTimer >= conf.stat_period * PERIOD_SEC) {
+  if (STAT_ENABLE && data.conf.stat_period && millis() - statisticTimer >= data.conf.stat_period * PERIOD_SEC) {
     statisticTimer = millis();
     rlog_i("info", "timer Statistic");
 
-    if(isStat(conf) && (WiFi.status() == WL_CONNECTED)) {
+    if(isStat(data.conf) && (WiFi.status() == WL_CONNECTED)) {
       getData();
-      getJSONData(conf, data, offset, calc, json_data);
-      sendHTTP(conf, json_data);
+      getJSONData(data, json_data);
+      sendHTTP(data.conf, json_data);
       flashLED();
     }
   }
@@ -528,8 +529,8 @@ void loop() {
   // check own state
   if (millis() - stateTimer >= PERIOD_CHECK_STATE) {
     stateTimer = millis();
-    data.impulses1 = imp1;
-    data.impulses2 = imp2;
+    data.data.impulses1 = imp1;
+    data.data.impulses2 = imp2;
   }
   // OTA check firmware
   if (millis() - otaTimer >= PERIOD_CHECK_OTA) {
@@ -544,7 +545,7 @@ void loop() {
     }
     rlog_i("info", "timer OTA ready=%d", needOTA);
 #endif
-    success = syncTime(conf);
+    success = syncTime(data.conf);
     rlog_i("info", "sync_ntp_time=%d", success);
   }
   // OTA processing one sec timer

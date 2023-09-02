@@ -5,7 +5,11 @@
 
 #define VERSION 5
 #define FIRMWARE_VERSION "0.50"
+#define HARDWARE_VERSION "0.10"
 #define BRAND_NAME "eMeter"
+#define CLASSIC 0
+#define LITE 0
+#define MODEL CLASSIC
 
 #define SSID_LEN 32
 #define PASSW_LEN 32

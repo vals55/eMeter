@@ -6,8 +6,9 @@
 #include "data.h"
 
 #define JSON_BUFFER 1024
+#define JSON_SMALL_BUFFER 256
 
-extern void getJSONData(const BoardConfig &conf, const Measurements &data, const Offset &offset, const Calculations & calc, DynamicJsonDocument &json_data);
+extern void getJSONData(const Data &data, DynamicJsonDocument &json_data);
 
 #endif
 
