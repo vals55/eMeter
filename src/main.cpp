@@ -14,6 +14,7 @@
 #include "json.h"
 #include "http.h"
 #include "mqtt.h"
+#include "ha.h"
 
 #if defined(ESP32)
     #error "Software Serial is not supported on the ESP32"
@@ -59,6 +60,8 @@ Measurements data;
 Extra ext;
 Offset offset;
 Calculations calc;
+
+Data data;
 
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
@@ -306,9 +309,9 @@ void getData() {
   last_imp2 = imp2;
   calc.voltage = data.voltage == 0 ? 220 : data.voltage;
   calc.current1 = calc.power1 / calc.voltage;
-  calc.energy1 =+ calc.power1;
+  calc.energy1 = imp1 / conf.coeff;
   calc.current2 = calc.power2 / calc.voltage;
-  calc.energy2 =+ calc.power2;
+  calc.energy2 = imp2  / conf.coeff;
 }
 
 #ifndef WEB_DISABLE
@@ -487,7 +490,7 @@ void loop() {
   // timers
   // mqtt
 #define MQTT_ENABLE 1
-  if (MQTT_ENABLE && conf.mqtt_period && millis() - mqttTimer >= conf.mqtt_period * PER_MIN) {
+  if (MQTT_ENABLE && conf.mqtt_period && millis() - mqttTimer >= conf.mqtt_period * PERIOD_MIN) {
     mqttTimer = millis();
     rlog_i("info", "timer MQTT");
     
@@ -505,7 +508,7 @@ void loop() {
   }
   // statistic
 #define STAT_ENABLE 0
-  if (STAT_ENABLE && conf.stat_period && millis() - statisticTimer >= conf.stat_period * PER_SEC) {
+  if (STAT_ENABLE && conf.stat_period && millis() - statisticTimer >= conf.stat_period * PERIOD_SEC) {
     statisticTimer = millis();
     rlog_i("info", "timer Statistic");
 
@@ -517,19 +520,19 @@ void loop() {
     }
   }
   // measurement
-  if (millis() - measurementTimer >= PER_MEASUREMENT) {
+  if (millis() - measurementTimer >= PERIOD_MEASUREMENT) {
     measurementTimer = millis();
     getData();
     flashLED();
   }
   // check own state
-  if (millis() - stateTimer >= PER_CHECK_STATE) {
+  if (millis() - stateTimer >= PERIOD_CHECK_STATE) {
     stateTimer = millis();
     data.impulses1 = imp1;
     data.impulses2 = imp2;
   }
   // OTA check firmware
-  if (millis() - otaTimer >= PER_CHECK_OTA) {
+  if (millis() - otaTimer >= PERIOD_CHECK_OTA) {
     otaTimer = millis();
 #ifndef WEB_DISABLE
     if(webActive) {
@@ -545,7 +548,7 @@ void loop() {
     rlog_i("info", "sync_ntp_time=%d", success);
   }
   // OTA processing one sec timer
-  if (millis() - secTimer >= 5 * PER_SEC) {
+  if (millis() - secTimer >= 5 * PERIOD_SEC) {
 #ifndef WEB_DISABLE
     if(needOTA == OTA_UPDATE_FINISH) {
       ESP.restart();

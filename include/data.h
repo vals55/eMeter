@@ -41,5 +41,12 @@ struct Extra {
     float minfreq;
     float minpf;
 };
+struct Data {
+    BoardConfig conf;
+    Measurements data;
+    Extra ext;
+    Offset offset;
+    Calculations calc;
+};
 
 #endif

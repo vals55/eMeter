@@ -3,8 +3,8 @@
 
 #include <Arduino.h>
 
-#define VERSION 4
-#define FIRMWARE_VERSION "0.41"
+#define VERSION 5
+#define FIRMWARE_VERSION "0.50"
 #define BRAND_NAME "eMeter"
 
 #define SSID_LEN 32
@@ -36,11 +36,11 @@
 #define DEFAULT_COEFF 3200
 
 //time
-#define PER_SEC 1000
-#define PER_MIN 60 * 1000
-#define PER_MEASUREMENT 1 * 1000
-#define PER_CHECK_STATE 1 * 1000
-#define PER_CHECK_OTA 24 * 3600 * 1000
+#define PERIOD_SEC 1000
+#define PERIOD_MIN 60 * 1000
+#define PERIOD_MEASUREMENT 1 * 1000
+#define PERIOD_CHECK_STATE 1 * 1000
+#define PERIOD_CHECK_OTA 24 * 3600 * 1000
 
 //ota
 #define NO_UPDATES 0
