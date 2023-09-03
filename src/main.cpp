@@ -101,7 +101,7 @@ bool updateConfig(String &topic, String &payload) {
     int prevslash = topic.lastIndexOf('/', endslash - 1);
     String param = topic.substring(prevslash + 1, endslash);
 
-    rlog_i("info", "MQTT CALLBACK: Parameter %s", param);
+    rlog_i("info", "MQTT CALLBACK: Parameter %s", param.c_str());
   
     if (param.equals(F("energy1"))) {
       energy = payload.toFloat();
@@ -199,18 +199,18 @@ bool reconnect() {
 
 bool recalcTariff1(float energy) {
   if (data.offset.energy1 != energy) {
-    rlog_i("info", "RECALC 1: Old Offset.energy1: %f new %d", data.offset.energy1, energy);
+    rlog_i("info", "RECALC 1: Old Offset.energy1: %f new %f", data.offset.energy1, energy);
     data.offset.energy1 = energy;
     data.offset.impulses1 = energy * data.conf.coeff;
     data.data.impulses1 = 0;
     data.calc.energy1 = 0;
     imp1 = 0;
 
-    if (json_data.containsKey("energy1")) {
-        json_data[F("energy1")] = data.offset.energy1;
+    if (json_data.containsKey("energy01")) {
+        json_data[F("energy01")] = data.offset.energy1;
     }
-    if (json_data.containsKey("imp1")) {
-        json_data[F("imp1")] = data.offset.impulses1;
+    if (json_data.containsKey("imp01")) {
+        json_data[F("imp01")] = data.offset.impulses1;
     }
     return true;
   }
@@ -219,18 +219,18 @@ bool recalcTariff1(float energy) {
 
 bool recalcTariff2(float energy) {
   if (data.offset.energy2 != energy) {
-    rlog_i("info", "RECALC 2: Old Offset.energy2: %f new %d", data.offset.energy2, energy);
+    rlog_i("info", "RECALC 2: Old Offset.energy2: %f new %f", data.offset.energy2, energy);
     data.offset.energy2 = energy;
     data.offset.impulses2 = energy * data.conf.coeff;
     data.data.impulses2 = 0;
     data.calc.energy2 = 0;
     imp2 = 0;
 
-    if (json_data.containsKey("energy2")) {
-        json_data[F("energy2")] = data.offset.energy2;
+    if (json_data.containsKey("energy02")) {
+        json_data[F("energy02")] = data.offset.energy2;
     }
-    if (json_data.containsKey("imp2")) {
-        json_data[F("imp2")] = data.offset.impulses2;
+    if (json_data.containsKey("imp02")) {
+        json_data[F("imp02")] = data.offset.impulses2;
     }
     return true;
   }
@@ -428,6 +428,7 @@ void setup() {
 bool flag = false;
 uint32_t btnTimer = 0;
 uint32_t mqttTimer = 0;
+uint32_t storageTimer = 0;
 uint32_t statisticTimer = 0;
 uint32_t measurementTimer = 0;
 uint32_t stateTimer = 0;
@@ -503,12 +504,29 @@ void loop() {
         removeSlash(topic);
         publishStorage(mqttClient, topic, data.calc.energy1+data.offset.energy1, data.calc.energy2+data.offset.energy2);
         publishData(mqttClient, topic, json_data, data.conf.mqtt_auto_discovery);
+        String discovery_topic = data.conf.mqtt_discovery_topic;
+        publishHA(mqttClient, topic, discovery_topic);
+      }
+      flashLED();
+    }
+  }
+  // storage mqtt
+  if (MQTT_ENABLE && millis() - storageTimer >= 1 * PERIOD_MIN) {
+    storageTimer = millis();
+    rlog_i("info", "timer MQTT");
+    
+    if(isMQTT(data.conf) && (WiFi.status() == WL_CONNECTED)) {
+      getData();
+      if (reconnect()) {
+        String topic = data.conf.mqtt_topic;
+        removeSlash(topic);
+        publishStorage(mqttClient, topic, data.calc.energy1+data.offset.energy1, data.calc.energy2+data.offset.energy2);
       }
       flashLED();
     }
   }
   // statistic
-#define STAT_ENABLE 0
+#define STAT_ENABLE 1
   if (STAT_ENABLE && data.conf.stat_period && millis() - statisticTimer >= data.conf.stat_period * PERIOD_SEC) {
     statisticTimer = millis();
     rlog_i("info", "timer Statistic");

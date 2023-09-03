@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 #define VERSION 5
-#define FIRMWARE_VERSION "0.50"
+#define FIRMWARE_VERSION "0.54"
 #define HARDWARE_VERSION "0.10"
 #define BRAND_NAME "eMeter"
 #define CLASSIC 0

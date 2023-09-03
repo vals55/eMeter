@@ -3,7 +3,8 @@
 
 #include "config.h"
 
-extern bool syncTime(BoardConfig &conf);
-extern String getCurrentTime();
+bool syncTime(BoardConfig &conf);
+String getCurrentTime();
+String getLocalTime();
 #endif
 

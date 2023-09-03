@@ -5,6 +5,7 @@
 #define NTP_ATTEMPTS 24
 #define START_VALID_TIME 1577826000UL   // Wed Jan 01 2020 00:00:00
 #define TIME_FORMAT "%FT%T%z"
+#define TIME_LOCAL_FORMAT "%Y-%m-%dT%T"
 
 bool syncTime(BoardConfig &conf) {
   
@@ -30,6 +31,16 @@ String getCurrentTime() {
   time_t now = time(nullptr);
   struct tm timeinfo;
   gmtime_r(&now, &timeinfo);
+  strftime(buf, sizeof(buf), TIME_FORMAT, &timeinfo);
+  return String(buf);
+}
+
+String getLocalTime() {
+  
+  char buf[100];
+  time_t now = time(nullptr);
+  struct tm timeinfo;
+  localtime_r(&now, &timeinfo);
   strftime(buf, sizeof(buf), TIME_FORMAT, &timeinfo);
   return String(buf);
 }
