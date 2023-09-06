@@ -1,8 +1,17 @@
 # eMeter
 <div id="badges">
-  <img src="https://img.shields.io/badge/Espressif ESP8266-ED4549" alt="ESP8266"/>
-  <img src="https://img.shields.io/badge/Home Assistant-01A9F4" alt="HA"/>
-  <img src="https://komarev.com/ghpvc/?username=vals55&style=flat-square&color=green" alt="vals"/>
+  <a href="https://www.espressif.com/">
+    <img src="https://img.shields.io/badge/Espressif ESP8266-ED4549" alt="ESP8266"/>
+  </a>  
+  <a href="https://www.home-assistant.io/">
+    <img src="https://img.shields.io/badge/Home Assistant-01A9F4" alt="HA"/>
+  </a>  
+  <a href="https://https://platformio.org//">
+    <img src="https://img.shields.io/badge/PlatformIO-FF7F00" alt="Platformio"/>
+  </a>  
+  <a href="#">
+    <img src="https://komarev.com/ghpvc/?username=vals55&style=flat-square&color=green" alt="vals"/>
+  </a>  
 </div>
 Когда-то давным-давно меня заинтересовал проект сбора данных от счетчика воды, тем более, что у моего счетчика был "хвостик" провода с импульсным выходом. И как оказалось, не только меня волновал этот вопрос, я даже нашел замечательный проект [https://github.com/dontsovcmc/waterius] который успешно повторил, модифицировав под себя. Питание от батареек заменил на постоянное, сделал собственную компоновку платы и немного переработал код прошивки под свои соображения.
 
