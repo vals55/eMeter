@@ -13,7 +13,7 @@
     <img src="https://komarev.com/ghpvc/?username=vals55&style=flat-square&color=green" alt="vals"/>
   </a>  
 </div>
-Some time ago I was interested in the project of data collection from a water meter, especially since my meter had a "tail" wire with a pulse output. And as it turned out, not only I was concerned about this issue, I even found a wonderful project [https://github.com/dontsovcmc/waterius], which I successfully repeated, modifying it to suit myself. I replaced the battery power supply with a permanent one, made my own board layout and slightly reworked the firmware code for my own considerations.
+Some time ago I was interested in the project of data collection from a water meter, especially since my meter had a pigtail wire with a pulse output. And as it turned out, not only I was concerned about this issue, I even found a wonderful project [https://github.com/dontsovcmc/waterius], which I successfully repeated, modifying it to suit myself. I replaced the battery power supply with a permanent one, made my own board layout and slightly reworked the firmware code for my own considerations.
 
 And some time ago I decided to do the same trick with electricity. It would seem that electricity meters are quite functional devices, but by this time I already had a smart home - Home Assistant and it lacked beautiful graphs of parameters of consumed energy. That's how this project was born. It uses a well-known non-invasive energy meter PZEM-004T v3.0. (looking ahead, I will say that an earlier version is also suitable). The library for it is quite good, as well as a number of other useful libraries, I just had to put it all together.
 
