@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #include <ESP8266WiFi.h>
 #include <IPAddress.h>
 #include <EEPROM.h>

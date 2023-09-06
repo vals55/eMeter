@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #include <Arduino.h>
 #include <Ticker.h>
 #include <ESP8266WiFi.h>

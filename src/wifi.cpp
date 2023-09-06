@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #include "wifi.h"
 #include "config.h"
 #include "rlog.h"

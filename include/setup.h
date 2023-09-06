@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #ifndef __SETUP_H
 #define __SETUP_H
 

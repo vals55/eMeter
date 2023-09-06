@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #ifndef __SYNCTIME_H
 #define __SYNCTIME_H
 

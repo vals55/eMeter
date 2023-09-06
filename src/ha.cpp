@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #include "ha.h"
 #include "utils.h"
 #include "porting.h"

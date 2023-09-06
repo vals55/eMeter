@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #include "mqtt.h"
 
 void publish_chunked(PubSubClient &mqtt_client, String &topic, String &payload, unsigned int chunk_size) {

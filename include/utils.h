@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #ifndef __UTILS_H
 #define __UTILS_H
 
@@ -13,15 +15,15 @@ inline void strncpy0(char *dest, const char *src, const size_t len) {
     dest[len - 1] = 0;
 }
 
-extern uint16_t getCRC(const BoardConfig &conf);
-extern bool isMQTT(const BoardConfig &conf);
-extern bool isStat(const BoardConfig &conf);
-extern bool isHA(const BoardConfig &conf);
-extern bool isDHCP(const BoardConfig &conf);
-extern String getDeviceName();
-extern String getAppName();
-extern String getMacAddressHex();
-extern String getProtocol(const String &url);
-extern void removeSlash(String &str);
+uint16_t getCRC(const BoardConfig &conf);
+bool isMQTT(const BoardConfig &conf);
+bool isStat(const BoardConfig &conf);
+bool isHA(const BoardConfig &conf);
+bool isDHCP(const BoardConfig &conf);
+String getDeviceName();
+String getAppName();
+String getMacAddressHex();
+String getProtocol(const String &url);
+void removeSlash(String &str);
 
 #endif

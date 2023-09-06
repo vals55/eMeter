@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #ifndef __DATA_H
 #define __DATA_H
 #include <Arduino.h>

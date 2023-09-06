@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #include "web.h"
 #include "rlog.h"
 #include "data.h"

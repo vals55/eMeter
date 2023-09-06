@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #ifndef __WIFI_H
 #define __WIFI_H
 
@@ -6,10 +8,10 @@
 
 #define WIFI_CONNECT_ATTEMPTS 2
 
-extern bool wifiConnect(BoardConfig &conf);
-extern void wifiBegin(BoardConfig &conf);
-extern void wifiSetMode(WiFiMode_t wifi_mode);
-extern void wifiShutdown();
-extern String wifiGetMode();
+bool wifiConnect(BoardConfig &conf);
+void wifiBegin(BoardConfig &conf);
+void wifiSetMode(WiFiMode_t wifi_mode);
+void wifiShutdown();
+String wifiGetMode();
 
 #endif

@@ -1,3 +1,5 @@
+// Copyright 2023 vals. All rights reserved.
+// SPDX-License-Identifier: MIT
 #include "sync_time.h"
 #include <time.h>
 #include "config.h"
