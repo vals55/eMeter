@@ -22,3 +22,16 @@
 Все намерянные показатели сети устройство может отправлять на сервер MQTT, через него в Home Assistant и по протоколу http на сервер сбора статистики, если она кому-то будет интересна.
 
 Также текущие показатели отражаются на web-странице устройства, но этой же странице можно обновить прошивку и полюбоваться на кривые графиков тока, напряжения, мощности и частоты в вашей электрической сети и их экстремальные значения за сутки.
+
+
+## Создано при помощи
+- PlatformIO (https://platformio.org/)
+- ESP8266 board definition 3.1.2 (https://github.com/esp8266/Arduino)
+- PZEM-004T-v30 (https://github.com/mandulaj/PZEM-004T-v30)
+- WiFiManafer (https://github.com/tzapu/WiFiManager)
+- ArduinoJson (https://github.com/bblanchon/ArduinoJson)
+- Arduino Client for MQTT (PubSubClient 2.8) by Nick O'Leary (https://github.com/knolleary/pubsubclient)
+- rLog (https://github.com/kotyara12/rLog)
+
+### Благодарность 
+Евгений Донцов (https://github.com/dontsovcmc/waterius), 2018 за идею удачного подхода

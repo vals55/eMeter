@@ -22,3 +22,15 @@ I planned to make this design in a din-rail enclosure for a typical electrical p
 The device can send all the measured energy parameters to the MQTT server, through it to Home Assistant and via http protocol to the server of statistics collection, if it will be interesting for someone.
 
 Also current measured energy parameters are reflected on the device web-page, and on the same page you can update the firmware and admire the curves of current, voltage, power and frequency graphs in your electric line and their extreme values for a day.
+
+## Created with
+- PlatformIO (https://platformio.org/)
+- ESP8266 board definition 3.1.2 (https://github.com/esp8266/Arduino)
+- PZEM-004T-v30 (https://github.com/mandulaj/PZEM-004T-v30)
+- WiFiManafer (https://github.com/tzapu/WiFiManager)
+- ArduinoJson (https://github.com/bblanchon/ArduinoJson)
+- Arduino Client for MQTT (PubSubClient 2.8) by Nick O'Leary (https://github.com/knolleary/pubsubclient)
+- rLog (https://github.com/kotyara12/rLog)
+
+### Credits 
+Evgeny Dontsov (https://github.com/dontsovcmc/waterius), 2018 for the idea of a successful approach
