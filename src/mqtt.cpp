@@ -105,10 +105,10 @@ void publishData(PubSubClient &mqtt_client, String &topic, DynamicJsonDocument &
 
 void publishStorage(PubSubClient &mqtt_client, String &topic, float energy1, float energy2) {
   unsigned long start = millis();
-  String storage_topic = topic + F(STORAGE_T0);
+  String storage_topic = topic + F(STORAGE_T1);
   String storage_value = String(energy1);
   publish(mqtt_client, storage_topic, storage_value, PUBLISH_MODE_SIMPLE);
-  storage_topic = topic + F(STORAGE_T1);
+  storage_topic = topic + F(STORAGE_T2);
   storage_value = String(energy2);
   publish(mqtt_client, storage_topic, storage_value, PUBLISH_MODE_SIMPLE);
 

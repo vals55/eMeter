@@ -28,7 +28,7 @@
 - PlatformIO (https://platformio.org/)
 - ESP8266 board definition 3.1.2 (https://github.com/esp8266/Arduino)
 - PZEM-004T-v30 (https://github.com/mandulaj/PZEM-004T-v30)
-- WiFiManafer (https://github.com/tzapu/WiFiManager)
+- WiFiManager (https://github.com/tzapu/WiFiManager)
 - ArduinoJson (https://github.com/bblanchon/ArduinoJson)
 - Arduino Client for MQTT (PubSubClient 2.8) by Nick O'Leary (https://github.com/knolleary/pubsubclient)
 - rLog (https://github.com/kotyara12/rLog)

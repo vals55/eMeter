@@ -17,8 +17,8 @@ void getJSONData(const Data &data, DynamicJsonDocument &json_data) {
   root[F("energy")]    = data.data.energy;
   root[F("pf")]        = data.data.pf;
 
-  // root[F("counter_t0")] = data.conf.counter_t0;
   // root[F("counter_t1")] = data.conf.counter_t1;
+  // root[F("counter_t2")] = data.conf.counter_t2;
 
   root[F("imp1")]  = data.data.impulses1;
   root[F("imp2")]  = data.data.impulses2;

@@ -109,14 +109,14 @@ bool updateConfig(String &topic, String &payload) {
       energy = payload.toFloat();
       if (energy > 0) {
         updated = recalcTariff1(energy);
-        rlog_i("info", "MQTT CALLBACK: new value of T0 energy: %f",  energy);
+        rlog_i("info", "MQTT CALLBACK: new value of T1 energy: %f",  energy);
       }
     }
     if (param.equals(F("energy2"))) {
       energy = payload.toFloat();
       if (energy > 0) {
         updated = recalcTariff2(energy);
-        rlog_i("info", "MQTT CALLBACK: new value of T1 energy: %f",  energy);
+        rlog_i("info", "MQTT CALLBACK: new value of T2 energy: %f",  energy);
       }
     }
     if (param.equals(F("mqtt_period"))) {
@@ -140,19 +140,19 @@ bool updateConfig(String &topic, String &payload) {
       }
     }
 // after reboot
-  } else if (topic.endsWith(F(STORAGE_T0))) {
-    energy = payload.toFloat();
-    if (energy > 0) {
-      rlog_i("info", "MQTT CALLBACK: get value of T0 energy: %f",  energy);
-      if (data.offset.energy1 == data.conf.counter_t0) {
-        recalcTariff1(energy);
-      }
-    }
   } else if (topic.endsWith(F(STORAGE_T1))) {
     energy = payload.toFloat();
     if (energy > 0) {
       rlog_i("info", "MQTT CALLBACK: get value of T1 energy: %f",  energy);
-      if (data.offset.energy2 == data.conf.counter_t1) {
+      if (data.offset.energy1 == data.conf.counter_t1) {
+        recalcTariff1(energy);
+      }
+    }
+  } else if (topic.endsWith(F(STORAGE_T2))) {
+    energy = payload.toFloat();
+    if (energy > 0) {
+      rlog_i("info", "MQTT CALLBACK: get value of T2 energy: %f",  energy);
+      if (data.offset.energy2 == data.conf.counter_t2) {
         recalcTariff2(energy);
       }
     }
@@ -404,10 +404,10 @@ void setup() {
   rlog_i("info", "sync_ntp_time = %d", success);
   
   if (data.offset.energy1 == 0) {
-    recalcTariff1(data.conf.counter_t0);
+    recalcTariff1(data.conf.counter_t1);
   }
   if (data.offset.energy2 == 0) {
-    recalcTariff2(data.conf.counter_t1);
+    recalcTariff2(data.conf.counter_t2);
   }
 
   rlog_i("info", "MQTT begin");
