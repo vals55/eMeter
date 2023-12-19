@@ -19,6 +19,7 @@ static const char c_measurement[] PROGMEM   = "measurement";
 static const char d_current[] PROGMEM   = "current";
 static const char d_energy[] PROGMEM    = "energy";
 static const char d_power[] PROGMEM     = "power";
+static const char d_rpower[] PROGMEM    = "reactive_power";
 static const char d_pf[] PROGMEM        = "power_factor";
 static const char d_voltage[] PROGMEM   = "voltage";
 static const char d_freq[] PROGMEM      = "frequency";
