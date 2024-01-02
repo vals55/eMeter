@@ -46,7 +46,7 @@
   #define ESP8266
 #endif
 #define BUTTON 15
-#define SETUP_LED 16  //2
+#define SETUP_LED 2 //16  //2
 #define CNT1_PIN 5
 #define CNT2_PIN 4
 
