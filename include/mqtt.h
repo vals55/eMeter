@@ -11,7 +11,8 @@
 #include "data.h"
 #include "utils.h"
 
-#define MQTT_MAX_TRIES 5
+#define MQTT_MAX_TRIES 1
+#define MQTT_PROGRESS_DELAY 1000
 #define MQTT_CONNECT_DELAY 100
 #define MQTT_ALL_TOPICS "/#"
 #define MQTT_QOS 1

@@ -46,7 +46,7 @@
   #define ESP8266
 #endif
 #define BUTTON 15
-#define SETUP_LED 2
+#define SETUP_LED 16  //2
 #define CNT1_PIN 5
 #define CNT2_PIN 4
 
@@ -174,7 +174,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
   rlog_i("info", "MQTT CALLBACK: Message payload: %s", mPayload.c_str());
 }
 
+uint32_t progressDelay = 0;
+
 bool reconnect() {
+  if (!isMQTT(data.conf)) {
+    return false;
+  }
   String client_id = getDeviceName();
   String topic = data.conf.mqtt_topic;
   removeSlash(topic);
@@ -185,14 +190,16 @@ bool reconnect() {
 
   rlog_i("info", "MQTT Connecting...");
   while (!mqttClient.connected() && attempts--) {
-    rlog_i("info", "MQTT Attempt #%d from %d", MQTT_MAX_TRIES - attempts + 1, MQTT_MAX_TRIES);
+    rlog_i("info", "MQTT Attempt #%d from %d", MQTT_MAX_TRIES - attempts, MQTT_MAX_TRIES);
     if (mqttClient.connect(client_id.c_str(), login, pass)) {
-      rlog_i("info", "MQTT Connected.");
+      progressDelay = 0;
+      rlog_i("info", "MQTT Connected. progress delay = %d", progressDelay);
       mqttClient.subscribe(subscribe_topic.c_str(), MQTT_QOS);
       rlog_i("info", "MQTT subscribed to: %s", subscribe_topic.c_str());
       return true;
     } else {
-      rlog_i("info", "MQTT Connect failed with state %d", mqttClient.state());
+      rlog_i("info", "MQTT client connect failed with state %d", mqttClient.state());
+      progressDelay += MQTT_PROGRESS_DELAY;
       delay(MQTT_CONNECT_DELAY);
     }
   }
@@ -410,12 +417,14 @@ void setup() {
     recalcTariff2(data.conf.counter_t2);
   }
 
-  rlog_i("info", "MQTT begin");
-  espClient.setTimeout(MQTT_SOCKET_TIMEOUT * 1000);
-  mqttClient.setBufferSize(MQTT_MAX_PACKET_SIZE);
-  mqttClient.setServer(data.conf.mqtt_host, data.conf.mqtt_port);
-  mqttClient.setSocketTimeout(MQTT_SOCKET_TIMEOUT);
-  mqttClient.setCallback(callback);
+  if(isMQTT(data.conf) && (WiFi.status() == WL_CONNECTED)) {
+    rlog_i("info", "MQTT begin");
+    espClient.setTimeout(MQTT_SOCKET_TIMEOUT * 1000);
+    mqttClient.setBufferSize(MQTT_MAX_PACKET_SIZE);
+    mqttClient.setServer(data.conf.mqtt_host, data.conf.mqtt_port);
+    mqttClient.setSocketTimeout(MQTT_SOCKET_TIMEOUT);
+    mqttClient.setCallback(callback);
+  }
 
   #ifndef OTA_DISABLE
     ArduinoOTA.begin();
@@ -449,9 +458,13 @@ void loop() {
   #ifndef WEB_DISABLE
     handleWeb();
   #endif
-    if (!mqttClient.connected()) {
+
+  #define MQTT_ENABLE 1
+  
+    if (MQTT_ENABLE && isMQTT(data.conf) && !mqttClient.connected()) {
       long now = millis();
-      if (now - lastReconnectAttempt > MQTT_RECONNECT_GAP) {
+      if (now - lastReconnectAttempt > progressDelay + MQTT_RECONNECT_GAP) {
+        rlog_i("info loop >>>>>", "MQTT reconnect GAP. progress delay = %d", progressDelay);
         lastReconnectAttempt = now;
         if (reconnect()) {
           lastReconnectAttempt = 0;
@@ -467,13 +480,15 @@ void loop() {
   if (btnState && !flag && millis() - btnTimer > 100) {
     flag = true;
     btnTimer = millis();
-    rlog_i("info", "PRESS");
+    rlog_i("info loop >>>>>", "PRESS");
   }
+  
   if (btnState && flag && millis() - btnTimer > BTN_HOLD_SETUP) {
     btnTimer = millis();
-    rlog_i("info", "PRESS HOLD");
+    rlog_i("info loop >>>>>", "PRESS HOLD");
     setupBoard();
   }
+  
   if (!btnState && flag && millis() - btnTimer > BTN_CLICK) {
     btnTimer = millis();
 #ifndef WEB_DISABLE
@@ -483,75 +498,87 @@ void loop() {
       webActive = startWeb();
     }
 #endif
-    rlog_i("info", "MAKE CLICK");
+    rlog_i("info loop >>>>>", "MAKE CLICK");
   }
+  
   if (!btnState && flag && millis() - btnTimer > 100) {
     flag = false;
     btnTimer = millis();
-    rlog_i("info", "RELEASE");
+    rlog_i("info loop >>>>>", "RELEASE");
   }
   
   // timers
   // mqtt
-#define MQTT_ENABLE 1
-  if (MQTT_ENABLE && data.conf.mqtt_period && millis() - mqttTimer >= data.conf.mqtt_period * PERIOD_MIN) {
-    mqttTimer = millis();
-    rlog_i("info", "timer MQTT");
-    
-    if(isMQTT(data.conf) && (WiFi.status() == WL_CONNECTED)) {
-      getData();
-      if (reconnect()) {
-        getJSONData(data, json_data);
-        String topic = data.conf.mqtt_topic;
-        removeSlash(topic);
-        publishStorage(mqttClient, topic, data.calc.energy1+data.offset.energy1, data.calc.energy2+data.offset.energy2);
-        publishData(mqttClient, topic, json_data, data.conf.mqtt_auto_discovery);
-        String discovery_topic = data.conf.mqtt_discovery_topic;
-        publishHA(mqttClient, topic, discovery_topic);
+  if((WiFi.status() == WL_CONNECTED)) {
+
+    if (MQTT_ENABLE && data.conf.mqtt_period && millis() - mqttTimer >= progressDelay + data.conf.mqtt_period * PERIOD_MIN) {
+      mqttTimer = millis();
+      rlog_i("info loop >>>>>", "timer MQTT. progress delay = %d", progressDelay);
+      
+      if(isMQTT(data.conf) && (WiFi.status() == WL_CONNECTED)) {
+        getData();
+        if (reconnect()) {
+          getJSONData(data, json_data);
+          String topic = data.conf.mqtt_topic;
+          removeSlash(topic);
+          publishStorage(mqttClient, topic, data.calc.energy1+data.offset.energy1, data.calc.energy2+data.offset.energy2);
+          publishData(mqttClient, topic, json_data, data.conf.mqtt_auto_discovery);
+          String discovery_topic = data.conf.mqtt_discovery_topic;
+          publishHA(mqttClient, topic, discovery_topic);
+        }
+        flashLED();
       }
-      flashLED();
     }
   }
+  
   // storage mqtt
-  if (MQTT_ENABLE && millis() - storageTimer >= 1 * PERIOD_MIN) {
-    storageTimer = millis();
-    rlog_i("info", "timer MQTT");
-    
-    if(isMQTT(data.conf) && (WiFi.status() == WL_CONNECTED)) {
-      getData();
-      if (reconnect()) {
-        String topic = data.conf.mqtt_topic;
-        removeSlash(topic);
-        publishStorage(mqttClient, topic, data.calc.energy1+data.offset.energy1, data.calc.energy2+data.offset.energy2);
+  if((WiFi.status() == WL_CONNECTED)) {
+    if (MQTT_ENABLE && millis() - storageTimer >= progressDelay + 1 * PERIOD_MIN) {
+      storageTimer = millis();
+
+      if(isMQTT(data.conf) && (WiFi.status() == WL_CONNECTED)) {
+        rlog_i("info loop >>>>>", "STORAGE timer MQTT. progress delay = %d", progressDelay);
+        getData();
+        if (reconnect()) {
+          String topic = data.conf.mqtt_topic;
+          removeSlash(topic);
+          publishStorage(mqttClient, topic, data.calc.energy1+data.offset.energy1, data.calc.energy2+data.offset.energy2);
+        }
+        flashLED();
       }
-      flashLED();
     }
   }
+
   // statistic
 #define STAT_ENABLE 1
-  if (STAT_ENABLE && data.conf.stat_period && millis() - statisticTimer >= data.conf.stat_period * PERIOD_SEC) {
-    statisticTimer = millis();
-    rlog_i("info", "timer Statistic");
+  if((WiFi.status() == WL_CONNECTED)) {
+    if (STAT_ENABLE && data.conf.stat_period && millis() - statisticTimer >= data.conf.stat_period * PERIOD_SEC) {
+      statisticTimer = millis();
 
-    if(isStat(data.conf) && (WiFi.status() == WL_CONNECTED)) {
-      getData();
-      getJSONData(data, json_data);
-      sendHTTP(data.conf, json_data);
-      flashLED();
+      if(isStat(data.conf) && (WiFi.status() == WL_CONNECTED)) {
+        rlog_i("info loop >>>>>", "timer Statistic");
+        getData();
+        getJSONData(data, json_data);
+        sendHTTP(data.conf, json_data);
+        flashLED();
+      }
     }
   }
+
   // measurement
   if (millis() - measurementTimer >= PERIOD_MEASUREMENT) {
     measurementTimer = millis();
     getData();
     flashLED();
   }
+  
   // check own state
   if (millis() - stateTimer >= PERIOD_CHECK_STATE) {
     stateTimer = millis();
     data.data.impulses1 = imp1;
     data.data.impulses2 = imp2;
   }
+  
   // OTA check firmware
   if (millis() - otaTimer >= PERIOD_CHECK_OTA) {
     otaTimer = millis();
@@ -563,11 +590,12 @@ void loop() {
     } else {
       needOTA = isFirmwareReady();
     }
-    rlog_i("info", "timer OTA ready=%d", needOTA);
+    rlog_i("info loop >>>>>", "timer OTA ready=%d", needOTA);
 #endif
     success = syncTime(data.conf);
-    rlog_i("info", "sync_ntp_time=%d", success);
+    rlog_i("info loop >>>>>", "sync_ntp_time=%d", success);
   }
+  
   // OTA processing one sec timer
   if (millis() - secTimer >= 5 * PERIOD_SEC) {
 #ifndef WEB_DISABLE

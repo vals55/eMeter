@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta name='format-detection' content='telephone=no'>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1,user-scalable=no'/>
+<title>eMeter</title>
+<script>
+function _(b) {
+    return document.getElementById(b)
+}
+
+function send(url, milli, _process) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.timeout = milli;
+    xhr.onreadystatechange = function(a) {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            _process(xhr.responseText)
+        }
+    };
+    xhr.send()
+}
+window.onload = function() {
+    function _refresh() {
+        function _process(msg) {
+            var obj = JSON.parse(msg);
+            Object.keys(obj).forEach(function(id) {
+                if (id.startsWith('inner')) {
+                    var t = id.slice(6);
+                    if (_(t)) {
+                        _(t).innerHTML = obj[id];
+                    }
+                }
+                if (id.startsWith('value')) {
+                    var t = id.slice(6);
+                    if (_(t)) {
+                        _(t).value = obj[id];
+                    }
+                }
+                if (id.startsWith('style')) {
+                    var t = id.slice(6);
+                    if (_(t)) {
+                        _(t).style = obj[id];
+                    }
+                }
+                if (id.startsWith('oncli')) {
+                    var t = id.slice(6);
+                    if (_(t)) {
+                        _(t).setAttribute('onClick', obj[id]);
+                    }
+                }
+            })
+        }
+        send('/states', 500, _process);
+    }
+    _refresh();
+    var d = setInterval(_refresh, 1000);
+}</script>
+<script type='text/javascript' src='http://github.com/joewalnes/smoothie/raw/master/smoothie.js'></script>
+<style>
+.pic{
+    animation:5s linear infinite rotate;
+}
+.v,.c,.p,.f,.e{
+    margin-right:5px;
+    text-align:end;
+    font-weight:600;
+}
+body{
+    text-align:center;
+    font-family:verdana
+}
+div{
+    padding:0;
+    font-size:1em;
+    margin:0;
+    box-sizing:border-box
+}
+input[type='file']{
+    width:100%;
+}
+.logo-cont{
+    display:flex
+}
+.logo-text{
+    display:inline;
+    font-weight:700;
+    color:#9303A7;
+    font-size:30px;
+    line-height:30px;
+    padding-left:15px;
+    margin-top:0
+}
+.wrap{
+    text-align:left;
+    display:inline-block;
+    min-width:260px;
+    max-width:500px;
+    margin:5px
+}
+a{
+    color:#333;
+    font-weight:500;
+    text-decoration:none
+}
+a:hover{
+    color:#C038D3;
+    text-decoration:none;
+}
+h1{
+    background-color:#060606;
+    color:#fff;
+}
+.tbl{
+    display:flex
+}
+.value{
+    width:150px;
+    border:1px solid #eee;
+    text-align:center;
+}
+.col{
+    width:200px;
+    border:1px solid #eee;
+    text-align:center;
+}
+.grey{
+    background-color:#ddd;
+}
+.cnt{
+    margin:10px 10px 0 0;
+}
+.info{
+    width:100%;
+     text-align:end;
+    font-size:.7em;
+    padding-top:5px;
+}
+@keyframes rotate{
+    from{
+        transform:rotate(0deg);
+    }
+    to{
+        transform:rotate(360deg);
+    }
+}
+</style>
+</head>
+<body class='b'>
+<div class='wrap'>
+  <div class='logo-cont'>
+    <div class='logo-img'><svg class='pic' fill='none' height='34' viewBox='0 0 34 34' width='34' xmlns='http://www.w3.org/2000/svg'><circle stroke='dodgerblue' stroke-width='4' r='15.0' cx='17.0' cy='17.0'></circle><rect fill='lightcoral' x='14' y='14' height='6' width='15' ry='3' transform='rotate(-40 17 17)'></svg></div>
+    <p class='logo-text'>eMeter</p>
+    <div class='info'>
+      <div>CPU <span id='freq'></span> MHz</div>
+      <div>memory: <span id='heap'></span>Kbyte</div>
+      <div>RSSI: <span id='rssi'></span> dBm</div>
+      <div><a href='/update'>firmware</a>: <span id='firmware'></span></div>
+    </div>
+  </div>
+  <div class='tbl'>
+    <div class='col grey'>
+      <p>Линия</p>
+    </div>
+    <div class='value grey'>
+      <p>U, В</p>
+    </div>
+    <div class='value grey'>
+      <p>I, А</p>
+    </div>
+    <div class='value grey'>
+      <p>P, Вт</p>
+    </div>
+    <div class='value grey'>
+      <p>Частота, Гц</p>
+    </div>
+    <div class='value grey'>
+      <p>Коэфф. мощн.</p>
+    </div>
+  </div>
+  <div class='tbl'>
+    <div class='col grey'>
+      <p>Фаза 1</p>
+    </div>
+    <div class='value'>
+      <p class='v' id='voltage'></p>
+    </div>
+    <div class='value'>
+      <p class='c' id='current'></p>
+    </div>
+    <div class='value'>
+      <p class='p' id='power'></p>
+    </div>
+    <div class='value'>
+      <p class='f' id='frequency'></p>
+    </div>
+    <div class='value'>
+      <p class='f' id='pf'></p>
+    </div>
+  </div>
+  <div class='tbl'>
+    <div class='col grey'>
+      <p>Максимум</p>
+    </div>
+    <div class='value'>
+      <p class='v' id='maxvoltage'></p>
+    </div>
+    <div class='value'>
+      <p class='c' id='maxcurrent'></p>
+    </div>
+    <div class='value'>
+      <p class='p' id='maxpower'></p>
+    </div>
+    <div class='value'>
+      <p class='f' id='maxfreq'></p>
+    </div>
+    <div class='value'>
+      <p class='f' id='maxpf'></p>
+    </div>
+  </div>
+  <div class='tbl'>
+    <div class='col grey'>
+      <p>Минимум</p>
+    </div>
+    <div class='value'>
+      <p class='v' id='minvoltage'></p>
+    </div>
+    <div class='value'>
+      <p class='c' id='mincurrent'></p>
+    </div>
+    <div class='value'>
+      <p class='p' id='minpower'></p>
+    </div>
+    <div class='value'>
+      <p class='f' id='minfreq'></p>
+    </div>
+    <div class='value'>
+      <p class='f' id='minpf'></p>
+    </div>
+  </div>
+  <div class='tbl'>
+    <span class='cnt'>Расчетное значение электроэнергии Т1:</span>
+    <span class='cnt' id='energy1'></span>
+    <span class='cnt'>кВт-ч</span>
+  </div>
+  <div class='tbl'>
+    <span class='cnt'>Расчетное значение электроэнергии Т2:</span>
+    <span class='cnt' id='energy2'></span>
+    <span class='cnt'>кВт-ч</span>
+  </div>
+  <div class='tbl' style='padding-top:30px;'>
+    <div class='v'>
+      <div>U, В</div>
+      <canvas id='voltagec' width='250' height='100'></canvas>
+    </div>  
+	<div class='c'>
+	  <div>I, А</div>
+	  <canvas id='currentc' width='250' height='100'></canvas>
+	</div>
+  </div>
+  <div class='tbl' style='padding-top:30px;'>
+    <div class='p'>
+      <div>P, Вт</div>
+      <canvas id='powerc' width='250' height='100'></canvas>
+    </div>  
+	<div class='f'>
+	  <div>Частота, Гц</div>
+	  <canvas id='freqc' width='250' height='100'></canvas>
+	</div>
+  </div>
+  <script>
+    (function() {
+      var voltage = new TimeSeries();
+      var current = new TimeSeries();
+      var power = new TimeSeries();
+      var frequency = new TimeSeries();
+
+      setInterval(function() {
+        var _voltage = parseFloat(_('voltage').innerHTML);
+        var _current = parseFloat(_('current').innerHTML);
+        var _power = parseFloat(_('power').innerHTML);
+        var _frequency = parseFloat(_('frequency').innerHTML);
+
+        voltage.append(new Date().getTime(), _voltage);
+        current.append(new Date().getTime(), _current);
+        power.append(new Date().getTime(), _power);
+        frequency.append(new Date().getTime(), _frequency);
+      }, 1000);
+      var smv = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: '', }, labels: { fillStyle:'rgb(255, 255, 255)' }});
+      smv.addTimeSeries(voltage, {strokeStyle:'#ff0000', fillStyle:'', lineWidth:2 });
+
+      var smc = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: '', }, labels: { fillStyle:'rgb(255, 255, 255)' }});
+      smc.addTimeSeries(current, {strokeStyle:'#ff00ff', fillStyle:'', lineWidth:2 });
+
+      var smp = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: '', }, labels: { fillStyle:'rgb(255, 255, 255)' }});
+	  smp.addTimeSeries(power, {strokeStyle:'#ffff00', fillStyle:'', lineWidth:2 });
+
+      var smf = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: '', }, labels: { fillStyle:'rgb(255, 255, 255)' }});
+      smf.addTimeSeries(frequency, {strokeStyle:'#00ff00', fillStyle:'', lineWidth:2 });
+      
+	  smv.streamTo(document.getElementById('voltagec'), 2000);
+	  smc.streamTo(document.getElementById('currentc'), 2000);
+	  smp.streamTo(document.getElementById('powerc'), 2000);
+	  smf.streamTo(document.getElementById('freqc'), 2000);
+    })();   
+  </script>
+</div>
+</body>
+</html>
