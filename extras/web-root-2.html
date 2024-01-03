@@ -287,16 +287,16 @@ h1{
         power.append(new Date().getTime(), _power);
         frequency.append(new Date().getTime(), _frequency);
       }, 1000);
-      var smv = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: '', }, labels: { fillStyle:'rgb(255, 255, 255)' }});
+      var smv = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: 4, }, labels: { fillStyle:'rgb(255, 255, 255)' }, maxValue: 230, minValue: 190});
       smv.addTimeSeries(voltage, {strokeStyle:'#ff0000', fillStyle:'', lineWidth:2 });
 
-      var smc = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: '', }, labels: { fillStyle:'rgb(255, 255, 255)' }});
+      var smc = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: 4, }, labels: { fillStyle:'rgb(255, 255, 255)' }, maxValue: 10, minValue: 0});
       smc.addTimeSeries(current, {strokeStyle:'#ff00ff', fillStyle:'', lineWidth:2 });
 
-      var smp = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: '', }, labels: { fillStyle:'rgb(255, 255, 255)' }});
-	  smp.addTimeSeries(power, {strokeStyle:'#ffff00', fillStyle:'', lineWidth:2 });
+      var smp = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: 4, }, labels: { fillStyle:'rgb(255, 255, 255)' }, maxValue: 2000, minValue: 0});
+	    smp.addTimeSeries(power, {strokeStyle:'#ffff00', fillStyle:'', lineWidth:2 });
 
-      var smf = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: '', }, labels: { fillStyle:'rgb(255, 255, 255)' }});
+      var smf = new SmoothieChart({grid:{strokeStyle:'rgb(200, 200, 200)', fillStyle:'rgb(0, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: 4, }, labels: { fillStyle:'rgb(255, 255, 255)' }, maxValue: 52, minValue: 48});
       smf.addTimeSeries(frequency, {strokeStyle:'#00ff00', fillStyle:'', lineWidth:2 });
       
 	  smv.streamTo(document.getElementById('voltagec'), 2000);
