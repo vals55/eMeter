@@ -84,7 +84,7 @@ DynamicJsonDocument json_data(JSON_BUFFER);
 
 volatile uint32_t debounce1 = 0;
 IRAM_ATTR void count1() {
-  if (millis() - debounce1 >= 100 && digitalRead(CNT1_PIN)) {
+  if (millis() - debounce1 >= 100 && !digitalRead(CNT1_PIN)) {
     debounce1 = millis();
     imp1++;
   }
@@ -92,7 +92,7 @@ IRAM_ATTR void count1() {
 
 volatile uint32_t debounce2 = 0;
 IRAM_ATTR void count2() {
-  if (millis() - debounce2 >= 100 && digitalRead(CNT2_PIN)) {
+  if (millis() - debounce2 >= 100 && !digitalRead(CNT2_PIN)) {
     debounce2 = millis();
     imp2++;
   }
@@ -391,9 +391,9 @@ void setup() {
   digitalWrite(SETUP_LED, LOW);
 
   pinMode (CNT1_PIN, INPUT_PULLUP);
-  attachInterrupt(CNT1_PIN, count1, RISING);
+  attachInterrupt(CNT1_PIN, count1, FALLING);
   pinMode (CNT2_PIN, INPUT_PULLUP);
-  attachInterrupt(CNT2_PIN, count2, RISING);
+  attachInterrupt(CNT2_PIN, count2, FALLING);
 
   Serial.begin(115200);
   Serial.println();
