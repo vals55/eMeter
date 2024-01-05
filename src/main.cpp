@@ -46,7 +46,7 @@
   #define ESP8266
 #endif
 #define BUTTON 15
-#define SETUP_LED 16  //2
+#define SETUP_LED 2 //16  //2
 #define CNT1_PIN 5
 #define CNT2_PIN 4
 
@@ -82,12 +82,20 @@ PZEM004Tv30 pzem(pzemSWSerial);
 
 DynamicJsonDocument json_data(JSON_BUFFER);
 
+volatile uint32_t debounce1 = 0;
 IRAM_ATTR void count1() {
-  imp1++;
+  if (millis() - debounce1 >= 100 && digitalRead(CNT1_PIN)) {
+    debounce1 = millis();
+    imp1++;
+  }
 }
 
+volatile uint32_t debounce2 = 0;
 IRAM_ATTR void count2() {
-  imp2++;
+  if (millis() - debounce2 >= 100 && digitalRead(CNT2_PIN)) {
+    debounce2 = millis();
+    imp2++;
+  }
 }
 
 time_t last_call;
@@ -291,7 +299,7 @@ void getData() {
   data.data.voltage = isnan(voltage) ? 0.0 : round(voltage * 10)/10;
   data.data.current = isnan(current) ? 0.0 : round(current * 10)/10;
   data.data.power = isnan(power) ? 0.0 : round(power * 10)/10;
-  data.data.energy = isnan(energy) ? 0.0 : round(energy * 10)/10;
+  data.data.energy = isnan(energy) ? 0.0 : round(energy * 100)/100;
   data.data.frequency = isnan(frequency) ? 0.0 : round(frequency * 10)/10;
   data.data.pf = isnan(pf) ? 0.0 : round(pf * 100)/100;
 
@@ -305,8 +313,8 @@ void getData() {
 
   calcExtraData(data.data, data.ext);
 
-  data.calc.energy1 = imp1 / data.conf.coeff;
-  data.calc.energy2 = imp2  / data.conf.coeff;
+  data.calc.energy1 = (float)imp1 / data.conf.coeff;
+  data.calc.energy2 = (float)imp2  / data.conf.coeff;
 
   time_t now = time(nullptr);
   long period = now - last_call;
@@ -315,13 +323,23 @@ void getData() {
   }
   last_call = now;
 
-  data.calc.power1 = (imp1 - last_imp1) * 1000 * period / data.conf.coeff;
+  data.calc.power1 = (float)(imp1 - last_imp1) * 1000.0 * period / data.conf.coeff;
   last_imp1 = imp1;
-  data.calc.power2 = (imp2 - last_imp2) * 1000 * period / data.conf.coeff;
+  data.calc.power2 = (float)(imp2 - last_imp2) * 1000.f * period / data.conf.coeff;
   last_imp2 = imp2;
-  data.calc.voltage = data.data.voltage == 0 ? 220 : data.data.voltage;
+  data.calc.voltage = data.data.voltage == 0 ? 220.0 : data.data.voltage;
   data.calc.current1 = data.calc.power1 / data.calc.voltage;
   data.calc.current2 = data.calc.power2 / data.calc.voltage;
+
+  rlog_i("measurment", "imp1: %d", imp1);
+  rlog_i("measurment", "imp2: %d", imp2);
+  rlog_i("measurment", "calc energy1: %f", data.calc.energy1);
+  rlog_i("measurment", "calc energy2: %f", data.calc.energy2);
+  rlog_i("measurment", "calc power1: %f", data.calc.power1);
+  rlog_i("measurment", "calc power2: %f", data.calc.power2);
+  rlog_i("measurment", "calc current1: %f", data.calc.current1);
+  rlog_i("measurment", "calc current2: %f", data.calc.current2);
+
 }
 
 #ifndef WEB_DISABLE
@@ -373,9 +391,9 @@ void setup() {
   digitalWrite(SETUP_LED, LOW);
 
   pinMode (CNT1_PIN, INPUT_PULLUP);
-  attachInterrupt(CNT1_PIN, count1, FALLING);
+  attachInterrupt(CNT1_PIN, count1, RISING);
   pinMode (CNT2_PIN, INPUT_PULLUP);
-  attachInterrupt(CNT2_PIN, count2, FALLING);
+  attachInterrupt(CNT2_PIN, count2, RISING);
 
   Serial.begin(115200);
   Serial.println();
@@ -609,5 +627,5 @@ void loop() {
     secTimer = millis();
 #endif
   }
-  delay(100);
+  //delay(100);
 }

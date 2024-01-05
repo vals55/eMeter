@@ -84,7 +84,7 @@ static const char icon_counter[] PROGMEM    = "mdi:counter";
 static const char icon_current[] PROGMEM    = "mdi:current-ac";
 static const char icon_freq[] PROGMEM       = "mdi:sine-wave";
 static const char icon_power[] PROGMEM      = "mdi:power-plug-outline";
-static const char icon_energy[] PROGMEM     = "mdi:lightning-bolt-outline";
+static const char icon_energy[] PROGMEM     = "mdi:counter";
 static const char icon_pf[] PROGMEM         = "mdi:percent-box-outline";
 static const char icon_rssi[] PROGMEM       = "mdi:wifi";
 static const char icon_period[] PROGMEM     = "mdi:timer-cog-outline";
@@ -99,6 +99,7 @@ static const char *const GENERAL_ENTITIES[][MQTT_PARAM_COUNT] PROGMEM = {
     {s_sensor,  n_power,    i_power,    c_measurement,  d_power,     u_power,    "",        icon_power},
     {s_sensor,  n_freq,     i_freq,     c_measurement,  d_freq,      u_freq,     "",        icon_freq},
     {s_sensor,  n_pf,       i_pf,       c_measurement,  d_pf,        u_pf,       "",        icon_pf},
+    {s_sensor,  n_energy,   i_energy,   c_measurement,  d_energy,    u_energy,   "",        icon_energy},
     {s_sensor,  n_time,     i_time,     "",             d_timestamp, "",         cat_diag,  icon_last_seen},
     {s_float,   n_t1,       i_t1,       "",             "",          u_t1,       cat_conf,  icon_counter},
     {s_float,   n_t2,       i_t2,       "",             "",          u_t2,       cat_conf,  icon_counter},

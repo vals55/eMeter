@@ -101,7 +101,7 @@ String buildEntity( const char *mqtt_topic,
     entity[F("cmd_t")] = command_topic;
     entity[F("cmd_tpl")] = F("{{value | round(0) | int}}");
     entity[F("mode")] = F("box");
-    entity[F("min")] = 1;
+    entity[F("min")] = 0;
     entity[F("max")] = 65535;
     entity[F("step")] = 1;
 
@@ -114,9 +114,9 @@ String buildEntity( const char *mqtt_topic,
     entity[F("cmd_t")] = command_topic;
     entity[F("cmd_tpl")] = F("{{value | round(2) | float}}");
     entity[F("mode")] = F("box");
-    entity[F("min")] = 1;
+    entity[F("min")] = 0;
     entity[F("max")] = 9999999.99;
-    entity[F("step")] = 1;
+    entity[F("step")] = 0.01;
 
     entity[F("optimistic")] = true;
     entity[F("retain")] = true;
@@ -219,12 +219,16 @@ void publishGeneralEntities(PubSubClient &mqtt_client, String &topic, String &di
   // добавляем одиночные сенсоры из массива GENERAL_ENTITIES с индекса 0 ("Voltage") до 9 ("RSSI")
   // всего 10 сенсоров без атрибутов
   bool extended = false;
-  for (int i = 0; i < 10; i++) {
+  // 2024-01-03 vals до 10 - Energy
+  // for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 11; i++) {
     extended = i == 0; // в первый сенсор дописываем всю информацию про устройство
     publishEntity(mqtt_client, topic, discovery_topic, device_id, device_mac, GENERAL_ENTITIES, i, extended);
   }
   // основной сенсор 10 ("RSSI") атрибуты 11,12,13 (ip, mac, chip)
-  publishEntity(mqtt_client, topic, discovery_topic, device_id, device_mac, GENERAL_ENTITIES, 10, false, 11, 3);
+  // 2024-01-03 vals до 10 - Energy
+  // publishEntity(mqtt_client, topic, discovery_topic, device_id, device_mac, GENERAL_ENTITIES, 10, false, 11, 3);
+  publishEntity(mqtt_client, topic, discovery_topic, device_id, device_mac, GENERAL_ENTITIES, 11, false, 12, 3);
 }
 
 void publishChannelEntities(PubSubClient &mqtt_client, String &topic, String &discovery_topic, String &device_id, String &device_mac) {
