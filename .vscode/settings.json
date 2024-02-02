@@ -17,6 +17,7 @@
         "stop_token": "cpp",
         "streambuf": "cpp",
         "regex": "cpp",
-        "tuple": "cpp"
+        "tuple": "cpp",
+        "cmath": "cpp"
     }
 }

@@ -46,7 +46,7 @@
   #define ESP8266
 #endif
 #define BUTTON 15
-#define SETUP_LED 16  //2
+#define SETUP_LED 2 //16  //2
 #define CNT1_PIN 5
 #define CNT2_PIN 4
 
@@ -84,7 +84,7 @@ DynamicJsonDocument json_data(JSON_BUFFER);
 
 volatile uint32_t debounce1 = 0;
 IRAM_ATTR void count1() {
-  if (millis() - debounce1 >= 150 && digitalRead(CNT1_PIN)) {
+  if (millis() - debounce1 >= 100 && digitalRead(CNT1_PIN)) {
     debounce1 = millis();
     imp1++;
   }
@@ -92,7 +92,7 @@ IRAM_ATTR void count1() {
 
 volatile uint32_t debounce2 = 0;
 IRAM_ATTR void count2() {
-  if (millis() - debounce2 >= 150 && digitalRead(CNT2_PIN)) {
+  if (millis() - debounce2 >= 100 && digitalRead(CNT2_PIN)) {
     debounce2 = millis();
     imp2++;
   }
@@ -151,15 +151,17 @@ bool updateConfig(String &topic, String &payload) {
   } else if (topic.endsWith(F(STORAGE_T1))) {
     energy = payload.toFloat();
     if (energy > 0) {
-      rlog_i("info", "MQTT CALLBACK: get value of T1 energy: %f",  energy);
-      if (data.offset.energy1 == data.conf.counter_t1) {
+      rlog_i("info", "MQTT CALLBACK: get STORAGE value of T1 energy: %f",  energy);
+      rlog_i("info", "MQTT CALLBACK: offset: %f config: %f",  data.offset.energy1, data.conf.counter_t1);
+    if (data.offset.energy1 == data.conf.counter_t1) {
         recalcTariff1(energy);
       }
     }
   } else if (topic.endsWith(F(STORAGE_T2))) {
     energy = payload.toFloat();
     if (energy > 0) {
-      rlog_i("info", "MQTT CALLBACK: get value of T2 energy: %f",  energy);
+      rlog_i("info", "MQTT CALLBACK: get STORAGE value of T2 energy: %f",  energy);
+      rlog_i("info", "MQTT CALLBACK: offset: %f config: %f",  data.offset.energy2, data.conf.counter_t2);
       if (data.offset.energy2 == data.conf.counter_t2) {
         recalcTariff2(energy);
       }
@@ -229,6 +231,9 @@ bool recalcTariff1(float energy) {
     if (json_data.containsKey("imp01")) {
         json_data[F("imp01")] = data.offset.impulses1;
     }
+    if (json_data.containsKey("imp1")) {
+        json_data[F("imp1")] = data.data.impulses1;
+    }
     return true;
   }
   return false;
@@ -249,6 +254,9 @@ bool recalcTariff2(float energy) {
     if (json_data.containsKey("imp02")) {
         json_data[F("imp02")] = data.offset.impulses2;
     }
+    if (json_data.containsKey("imp2")) {
+        json_data[F("imp2")] = data.data.impulses2;
+    }
     return true;
   }
   return false;
@@ -256,7 +264,7 @@ bool recalcTariff2(float energy) {
 
 void flashLED() {
   digitalWrite(SETUP_LED, HIGH);
-  delay(20);
+  delay(5);
   digitalWrite(SETUP_LED, LOW);
 }
 
@@ -296,25 +304,43 @@ void getData() {
   float frequency = pzem.frequency();
   float pf = pzem.pf();
 
+  if (power > 9999.9f) {
+    pzem.resetEnergy();
+  }
+
+#define NOT_ROUND_DATA
+#ifdef ROUND_DATA
   data.data.voltage = isnan(voltage) ? 0.0 : round(voltage * 10)/10;
   data.data.current = isnan(current) ? 0.0 : round(current * 10)/10;
   data.data.power = isnan(power) ? 0.0 : round(power * 10)/10;
   data.data.energy = isnan(energy) ? 0.0 : round(energy * 100)/100;
   data.data.frequency = isnan(frequency) ? 0.0 : round(frequency * 10)/10;
-  data.data.pf = isnan(pf) ? 0.0 : round(pf * 100)/100;
-
-  // rlog_i("info", "Address: %04x", pzem.readAddress());
-  // rlog_i("info", "Voltage: %.1f", data.voltage);
-  // rlog_i("info", "Current: %.1f", data.current);
-  // rlog_i("info", "Power: %.1f", data.power);
-  // rlog_i("info", "Energy: %.1f", data.energy);
-  // rlog_i("info", "Freq: %.1f", data.frequency);
-  // rlog_i("info", "pf: %.2f", data.pf);
+  data.data.pf = (pf == 0.0f || isnan(pf)) ? 1.0 : round(pf * 100)/100;
+#else
+  data.data.voltage = isnan(voltage) ? 0.0 : voltage;
+  data.data.current = isnan(current) ? 0.0 : current;
+  data.data.power = isnan(power) ? 0.0 : power;
+  data.data.energy = isnan(energy) ? 0.0 : energy;
+  data.data.frequency = isnan(frequency) ? 0.0 : frequency;
+  data.data.pf = (pf == 0.0f || isnan(pf)) ? 1.0 : pf;
+#endif
+  // rlog_i("measurment", "Address: %04x", pzem.readAddress());
+  // rlog_i("measurment", "Voltage: %f", data.data.voltage);
+  // rlog_i("measurment", "Current: %f", data.data.current);
+  // rlog_i("measurment", "Power: %f", data.data.power);
+  // rlog_i("measurment", "Energy: %f", data.data.energy);
+  // rlog_i("measurment", "Freq: %f", data.data.frequency);
+  // rlog_i("measurment", "pf: %f", data.data.pf);
 
   calcExtraData(data.data, data.ext);
+  
+  float coeff = (float)data.conf.coeff;
+  if (!coeff) {
+    coeff = 3200.0f;
+  }
 
-  data.calc.energy1 = (float)imp1 / data.conf.coeff;
-  data.calc.energy2 = (float)imp2  / data.conf.coeff;
+  data.calc.energy1 = (float)imp1 / coeff;
+  data.calc.energy2 = (float)imp2  / coeff;
 
   time_t now = time(nullptr);
   long period = now - last_call;
@@ -323,16 +349,19 @@ void getData() {
   }
   last_call = now;
 
-  data.calc.power1 = (float)(imp1 - last_imp1) * 1000.0 * period / data.conf.coeff;
+  data.calc.power1 = (float)(imp1 - last_imp1) * 1000.0f * period / coeff;
   last_imp1 = imp1;
-  data.calc.power2 = (float)(imp2 - last_imp2) * 1000.f * period / data.conf.coeff;
+  data.calc.power2 = (float)(imp2 - last_imp2) * 1000.0f * period / coeff;
   last_imp2 = imp2;
-  data.calc.voltage = data.data.voltage == 0 ? 220.0 : data.data.voltage;
-  data.calc.current1 = data.calc.power1 / data.calc.voltage;
-  data.calc.current2 = data.calc.power2 / data.calc.voltage;
+  voltage = isnan(voltage) ? 220.0f : voltage;
+  data.calc.voltage = voltage;
+  data.calc.current1 = data.calc.power1 / voltage / data.data.pf;
+  data.calc.current2 = data.calc.power2 / voltage / data.data.pf;
 
   rlog_i("measurment", "imp1: %d", imp1);
   rlog_i("measurment", "imp2: %d", imp2);
+  rlog_i("measurment", "voltage: %f", voltage);
+  rlog_i("measurment", "pf: %f", data.data.pf);
   rlog_i("measurment", "calc energy1: %f", data.calc.energy1);
   rlog_i("measurment", "calc energy2: %f", data.calc.energy2);
   rlog_i("measurment", "calc power1: %f", data.calc.power1);

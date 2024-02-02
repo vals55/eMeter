@@ -169,8 +169,12 @@ void startAP(BoardConfig &conf) {
   // set custom webserver port, automatic captive portal does not work with custom ports!
   // wm.setHttpPort(8080);
 
-  wm.startConfigPortal(getAppName().c_str());
+  bool result = wm.startConfigPortal(getAppName().c_str());
   
+  if (!result) {
+    return;
+  }
+
 #ifdef WIFI_DEBUG_INFO
    wifiInfo();
 #endif  

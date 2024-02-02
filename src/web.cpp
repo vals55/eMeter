@@ -143,7 +143,7 @@ void sendMessage(String &message) {
   message += String(buffer);
   message += F("}");
 #ifndef STOP_STATE_DEBUG
-  rlog_i("info", "WEB message %s", message.c_str());
+  rlog_i("web", "WEB message %s", message.c_str());
 #endif  
 }
 
