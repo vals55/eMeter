@@ -171,9 +171,9 @@ void startAP(BoardConfig &conf) {
 
   bool result = wm.startConfigPortal(getAppName().c_str());
   
-  if (!result) {
-    return;
-  }
+  // if (!result) {
+  //   return;
+  // }
 
 #ifdef WIFI_DEBUG_INFO
    wifiInfo();

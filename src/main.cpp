@@ -53,6 +53,10 @@
 #define BTN_HOLD_SETUP 5000
 #define BTN_CLICK 200
 
+// #define UNDEFINED 0
+// #define JUST_SUBSCRIBED 1
+// #define SUBSCRIBED
+
 void getData();
 bool recalcTariff1(float energy);
 bool recalcTariff2(float energy);
@@ -101,12 +105,17 @@ IRAM_ATTR void count2() {
 time_t last_call;
 uint32_t last_imp1;
 uint32_t last_imp2;
+uint8_t setup_state;    // init in reconnect()
 
 bool updateConfig(String &topic, String &payload) {
   bool updated = false;
   float energy = 0;
   int period = 0;
-  if (topic.endsWith(F("/set"))) {
+  if (setup_state) {
+    setup_state--;
+  }
+
+  if (topic.endsWith(F("/set")) && !setup_state) {
     int endslash = topic.lastIndexOf('/');
     int prevslash = topic.lastIndexOf('/', endslash - 1);
     String param = topic.substring(prevslash + 1, endslash);
@@ -147,24 +156,22 @@ bool updateConfig(String &topic, String &payload) {
         }
       }
     }
-// after reboot
+// after resubscribe
   } else if (topic.endsWith(F(STORAGE_T1))) {
     energy = payload.toFloat();
-    if (energy > 0) {
-      rlog_i("info", "MQTT CALLBACK: get STORAGE value of T1 energy: %f",  energy);
-      rlog_i("info", "MQTT CALLBACK: offset: %f config: %f",  data.offset.energy1, data.conf.counter_t1);
-    if (data.offset.energy1 == data.conf.counter_t1) {
+    if (energy > 0 && setup_state) {
+      rlog_i("info", "MQTT CALLBACK: get STORAGE value and SET to T1 energy: %f",  energy);
+      // if (data.offset.energy1 == data.conf.counter_t1) {
         recalcTariff1(energy);
-      }
+      // }
     }
   } else if (topic.endsWith(F(STORAGE_T2))) {
     energy = payload.toFloat();
-    if (energy > 0) {
-      rlog_i("info", "MQTT CALLBACK: get STORAGE value of T2 energy: %f",  energy);
-      rlog_i("info", "MQTT CALLBACK: offset: %f config: %f",  data.offset.energy2, data.conf.counter_t2);
-      if (data.offset.energy2 == data.conf.counter_t2) {
+    if (energy > 0 && setup_state) {
+      rlog_i("info", "MQTT CALLBACK: get STORAGE value and SET to T2 energy: %f",  energy);
+      // if (data.offset.energy2 == data.conf.counter_t2) {
         recalcTariff2(energy);
-      }
+      // }
     }
   }
  
@@ -206,6 +213,7 @@ bool reconnect() {
       rlog_i("info", "MQTT Connected. progress delay = %d", progressDelay);
       mqttClient.subscribe(subscribe_topic.c_str(), MQTT_QOS);
       rlog_i("info", "MQTT subscribed to: %s", subscribe_topic.c_str());
+      setup_state = 6;
       return true;
     } else {
       rlog_i("info", "MQTT client connect failed with state %d", mqttClient.state());
@@ -218,7 +226,7 @@ bool reconnect() {
 
 bool recalcTariff1(float energy) {
   if (data.offset.energy1 != energy) {
-    rlog_i("info", "RECALC 1: Old Offset.energy1: %f new %f", data.offset.energy1, energy);
+    rlog_i("info", "RECALC 1: Old Offset.energy1: %f SET new %f", data.offset.energy1, energy);
     data.offset.energy1 = energy;
     data.offset.impulses1 = energy * data.conf.coeff;
     data.data.impulses1 = 0;
@@ -241,7 +249,7 @@ bool recalcTariff1(float energy) {
 
 bool recalcTariff2(float energy) {
   if (data.offset.energy2 != energy) {
-    rlog_i("info", "RECALC 2: Old Offset.energy2: %f new %f", data.offset.energy2, energy);
+    rlog_i("info", "RECALC 2: Old Offset.energy2: %f SET new %f", data.offset.energy2, energy);
     data.offset.energy2 = energy;
     data.offset.impulses2 = energy * data.conf.coeff;
     data.data.impulses2 = 0;
@@ -415,7 +423,7 @@ uint8_t isFirmwareReady() {
 
 void setup() {
   bool success = false;
-
+  
   pinMode(SETUP_LED, OUTPUT);
   digitalWrite(SETUP_LED, LOW);
 

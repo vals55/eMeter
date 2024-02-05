@@ -81,7 +81,8 @@ bool loadConfig(BoardConfig &conf) {
 
         conf.version = VERSION;
         rlog_i("info", "cfg version=%d", conf.version);
-
+        conf.counter_t1 = 0;
+        conf.counter_t2 = 0;
         String default_topic = String(MQTT_DEFAULT_TOPIC_PREFIX) + "/" + String(getChipId()) + "/";
         strncpy0(conf.mqtt_topic, default_topic.c_str(), default_topic.length() + 1);
         conf.mqtt_port = MQTT_DEFAULT_PORT;
