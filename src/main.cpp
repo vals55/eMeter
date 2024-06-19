@@ -46,7 +46,7 @@
   #define ESP8266
 #endif
 #define BUTTON 15
-#define SETUP_LED 2
+#define SETUP_LED 16
 #define CNT1_PIN 5
 #define CNT2_PIN 4
 
@@ -428,9 +428,9 @@ void setup() {
   digitalWrite(SETUP_LED, LOW);
 
   pinMode (CNT1_PIN, INPUT_PULLUP);
-  attachInterrupt(CNT1_PIN, count1, RISING);
+  attachInterrupt(CNT1_PIN, count1, FALLING);
   pinMode (CNT2_PIN, INPUT_PULLUP);
-  attachInterrupt(CNT2_PIN, count2, RISING);
+  attachInterrupt(CNT2_PIN, count2, FALLING);
 
   Serial.begin(115200);
   Serial.println();
@@ -664,5 +664,5 @@ void loop() {
     secTimer = millis();
 #endif
   }
-  //delay(100);
+  delay(100);
 }

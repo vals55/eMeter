@@ -6,11 +6,11 @@
 #include <Arduino.h>
 
 #define VERSION 5
-#define FIRMWARE_VERSION "0.68"
+#define FIRMWARE_VERSION "0.683"
 #define HARDWARE_VERSION "0.10"
 #define BRAND_NAME "eMeter"
 #define CLASSIC 0
-#define LITE 0
+#define LITE 1
 #define MODEL CLASSIC
 
 #define SSID_LEN 32
