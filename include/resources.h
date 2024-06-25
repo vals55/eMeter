@@ -49,6 +49,9 @@ static const char n_t1[] PROGMEM        = "Energy T1";
 static const char u_t1[] PROGMEM        = "kWh";
 static const char n_t2[] PROGMEM        = "Energy T2";
 static const char u_t2[] PROGMEM        = "kWh";
+static const char n_t0[] PROGMEM        = "Energy offset";
+static const char u_t0[] PROGMEM        = "kWh";
+static const char n_constant[] PROGMEM  = "Meter constant";
 static const char n_mqtt_per[] PROGMEM  = "MQTT send period";
 static const char u_min[] PROGMEM       = "min";
 static const char n_stat_per[] PROGMEM  = "Stat send period";
@@ -69,9 +72,11 @@ static const char i_mac[] PROGMEM       = "mac";
 static const char i_chip[] PROGMEM      = "chip_id";
 static const char i_t1[] PROGMEM        = "energy1";
 static const char i_t2[] PROGMEM        = "energy2";
+static const char i_t0[] PROGMEM        = "energy_offset";
 static const char i_mqtt_per[] PROGMEM  = "mqtt_period";
 static const char i_stat_per[] PROGMEM  = "stat_period";
 static const char i_energy0[] PROGMEM   = "energy0";
+static const char i_constant[] PROGMEM  = "constant";
 static const char i_imp0[] PROGMEM      = "imp0";
 static const char i_current0[] PROGMEM  = "current0";
 static const char i_power0[] PROGMEM    = "power0";
@@ -90,6 +95,7 @@ static const char icon_rssi[] PROGMEM       = "mdi:wifi";
 static const char icon_period[] PROGMEM     = "mdi:timer-cog-outline";
 static const char icon_last_seen[] PROGMEM  = "mdi:clock-outline";
 static const char icon_voltage[] PROGMEM    = "mdi:flash-outline";
+static const char icon_constant[] PROGMEM   = "mdi:calculator";
 
 static const char *const GENERAL_ENTITIES[][MQTT_PARAM_COUNT] PROGMEM = {
     // type,    name,       sensor_id,  state_class,    dev_class,   unit,       cat,       icon
@@ -103,6 +109,8 @@ static const char *const GENERAL_ENTITIES[][MQTT_PARAM_COUNT] PROGMEM = {
     {s_sensor,  n_time,     i_time,     "",             d_timestamp, "",         cat_diag,  icon_last_seen},
     {s_float,   n_t1,       i_t1,       "",             "",          u_t1,       cat_conf,  icon_counter},
     {s_float,   n_t2,       i_t2,       "",             "",          u_t2,       cat_conf,  icon_counter},
+    {s_float,   n_t0,       i_t0,       "",             "",          u_t0,       cat_conf,  icon_counter},
+    {s_number,  n_constant, i_constant, "",             "",          "",         cat_conf,  icon_constant},
     {s_number,  n_mqtt_per, i_mqtt_per, "",             d_duration,  u_min,      cat_conf,  icon_period},
     {s_number,  n_stat_per, i_stat_per, "",             d_duration,  u_sec,      cat_conf,  icon_period},
     {s_sensor,  n_rssi,     i_rssi,     c_measurement,  d_rssi,      u_rssi,     cat_diag,  icon_rssi},

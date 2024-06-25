@@ -103,13 +103,19 @@ void publishData(PubSubClient &mqtt_client, String &topic, DynamicJsonDocument &
   rlog_i("info", "MQTT: Publish data finished for %d millis", millis() - start);
 }
 
-void publishStorage(PubSubClient &mqtt_client, String &topic, float energy1, float energy2) {
+void publishStorage(PubSubClient &mqtt_client, String &topic, float energy1, float energy2, float energy0, uint32_t constant) {
   unsigned long start = millis();
   String storage_topic = topic + F(STORAGE_T1);
   String storage_value = String(energy1);
   publish(mqtt_client, storage_topic, storage_value, PUBLISH_MODE_SIMPLE);
   storage_topic = topic + F(STORAGE_T2);
   storage_value = String(energy2);
+  publish(mqtt_client, storage_topic, storage_value, PUBLISH_MODE_SIMPLE);
+  storage_topic = topic + F(STORAGE_T0);
+  storage_value = String(energy0);
+  publish(mqtt_client, storage_topic, storage_value, PUBLISH_MODE_SIMPLE);
+  storage_topic = topic + F(STORAGE_CONSTANT);
+  storage_value = String(constant);
   publish(mqtt_client, storage_topic, storage_value, PUBLISH_MODE_SIMPLE);
 
   rlog_i("info", "MQTT: Publish storage data finished for %d millis", millis() - start);

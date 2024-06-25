@@ -26,9 +26,11 @@
 
 #define STORAGE_T1 "/energy_t1"
 #define STORAGE_T2 "/energy_t2"
+#define STORAGE_T0 "/energy_t0"
+#define STORAGE_CONSTANT "/constant"
 
 void publish(PubSubClient &mqtt_client, String &topic, String &payload, int mode);
 void publishData(PubSubClient &mqtt_client, String &topic, DynamicJsonDocument &json_data, bool auto_discovery);
-void publishStorage(PubSubClient &mqtt_client, String &topic, float energy1, float energy2);
+void publishStorage(PubSubClient &mqtt_client, String &topic, float energy1, float energy2, float energy0, uint32_t constant);
 
 #endif

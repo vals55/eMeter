@@ -14,7 +14,7 @@ void getJSONData(const Data &data, DynamicJsonDocument &json_data) {
   root[F("current")]   = data.data.current;
   root[F("power")]     = data.data.power;
   root[F("frequency")] = data.data.frequency;
-  root[F("energy")]    = data.data.energy;
+  root[F("energy")]    = data.data.energy + data.offset.energy0;
   root[F("pf")]        = data.data.pf;
 
   // root[F("counter_t1")] = data.conf.counter_t1;
@@ -33,6 +33,7 @@ void getJSONData(const Data &data, DynamicJsonDocument &json_data) {
   root[F("current02")] = data.calc.current2;
   root[F("power02")]   = data.calc.power2;
   root[F("energy02")]  = data.calc.energy2 + data.offset.energy2;
+  root[F("constant")]  = data.conf.coeff;
 
   root[F("rssi")] = WiFi.RSSI();
   root[F("mac")]  = WiFi.macAddress();

@@ -91,6 +91,8 @@ void sendMessage(String &message) {
   message += String(data.data.current);
   message += F(", \"inner-power\": ");
   message += String(data.data.power);
+  message += F(", \"inner-energy0\": ");
+  message += String(data.data.energy+data.offset.energy0);
   message += F(", \"inner-frequency\": ");
   message += String(data.data.frequency);
   message += F(", \"inner-pf\": ");

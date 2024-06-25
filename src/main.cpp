@@ -110,6 +110,7 @@ uint8_t setup_state;    // init in reconnect()
 bool updateConfig(String &topic, String &payload) {
   bool updated = false;
   float energy = 0;
+  long constant = 0;
   int period = 0;
   if (setup_state) {
     setup_state--;
@@ -156,22 +157,57 @@ bool updateConfig(String &topic, String &payload) {
         }
       }
     }
-// after resubscribe
+    if (param.equals(F("energy_offset"))) {
+      energy = payload.toFloat();
+      if (energy != data.offset.energy0) {
+        data.offset.energy0 = energy;
+        updated = true;
+        rlog_i("info", "MQTT CALLBACK: new value of energy offset: %d",  energy);
+      }
+    }
+    if (param.equals(F("constant"))) {
+      constant = payload.toInt();
+      if (constant != data.conf.coeff) {
+        if (constant == 0) {
+          data.conf.coeff = DEFAULT_COEFF;
+          updated = true;
+        } else {
+          data.conf.coeff = constant;
+          updated = true;
+        }
+        rlog_i("info", "MQTT CALLBACK: new value of constant: %d",  constant);
+      }
+    }
+// after re-subscribe
   } else if (topic.endsWith(F(STORAGE_T1))) {
     energy = payload.toFloat();
     if (energy > 0 && setup_state) {
       rlog_i("info", "MQTT CALLBACK: get STORAGE value and SET to T1 energy: %f",  energy);
-      // if (data.offset.energy1 == data.conf.counter_t1) {
-        recalcTariff1(energy);
-      // }
+      recalcTariff1(energy);
     }
   } else if (topic.endsWith(F(STORAGE_T2))) {
     energy = payload.toFloat();
     if (energy > 0 && setup_state) {
       rlog_i("info", "MQTT CALLBACK: get STORAGE value and SET to T2 energy: %f",  energy);
-      // if (data.offset.energy2 == data.conf.counter_t2) {
-        recalcTariff2(energy);
-      // }
+      recalcTariff2(energy);
+     }
+  } else if (topic.endsWith(F(STORAGE_T0))) {
+    energy = payload.toFloat();
+    if (isnan(energy) && setup_state) {
+      data.offset.energy0 = energy;
+      rlog_i("info", "MQTT CALLBACK: get STORAGE value and SET to T0 energy: %f",  energy);
+    }
+  } else if (topic.endsWith(F(STORAGE_CONSTANT))) {
+    constant = payload.toInt();
+    if (isnan(constant) && setup_state) {
+        if (constant == 0) {
+          data.conf.coeff = DEFAULT_COEFF;
+          updated = true;
+        } else {
+          data.conf.coeff = constant;
+          updated = true;
+        }
+      rlog_i("info", "MQTT CALLBACK: get STORAGE value and SET to constant: %f",  constant);
     }
   }
  
@@ -370,6 +406,8 @@ void getData() {
   rlog_i("measurment", "imp2: %d", imp2);
   rlog_i("measurment", "voltage: %f", voltage);
   rlog_i("measurment", "pf: %f", data.data.pf);
+  rlog_i("measurment", "energy: %f", data.data.energy);
+  rlog_i("measurment", "energy offset: %f", data.offset.energy0);
   rlog_i("measurment", "calc energy1: %f", data.calc.energy1);
   rlog_i("measurment", "calc energy2: %f", data.calc.energy2);
   rlog_i("measurment", "calc power1: %f", data.calc.power1);
@@ -576,7 +614,7 @@ void loop() {
           getJSONData(data, json_data);
           String topic = data.conf.mqtt_topic;
           removeSlash(topic);
-          publishStorage(mqttClient, topic, data.calc.energy1+data.offset.energy1, data.calc.energy2+data.offset.energy2);
+          publishStorage(mqttClient, topic, data.calc.energy1+data.offset.energy1, data.calc.energy2+data.offset.energy2, data.offset.energy0, data.conf.coeff);
           publishData(mqttClient, topic, json_data, data.conf.mqtt_auto_discovery);
           String discovery_topic = data.conf.mqtt_discovery_topic;
           publishHA(mqttClient, topic, discovery_topic);
@@ -597,7 +635,7 @@ void loop() {
         if (reconnect()) {
           String topic = data.conf.mqtt_topic;
           removeSlash(topic);
-          publishStorage(mqttClient, topic, data.calc.energy1+data.offset.energy1, data.calc.energy2+data.offset.energy2);
+          publishStorage(mqttClient, topic, data.calc.energy1+data.offset.energy1, data.calc.energy2+data.offset.energy2, data.offset.energy0, data.conf.coeff);
         }
         flashLED();
       }

@@ -221,14 +221,16 @@ void publishGeneralEntities(PubSubClient &mqtt_client, String &topic, String &di
   bool extended = false;
   // 2024-01-03 vals до 10 - Energy
   // for (int i = 0; i < 10; i++) {
-  for (int i = 0; i < 11; i++) {
+  // 2024-06-25 vals до 12
+  // for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 13; i++) {
     extended = i == 0; // в первый сенсор дописываем всю информацию про устройство
     publishEntity(mqtt_client, topic, discovery_topic, device_id, device_mac, GENERAL_ENTITIES, i, extended);
   }
   // основной сенсор 10 ("RSSI") атрибуты 11,12,13 (ip, mac, chip)
   // 2024-01-03 vals до 10 - Energy
   // publishEntity(mqtt_client, topic, discovery_topic, device_id, device_mac, GENERAL_ENTITIES, 10, false, 11, 3);
-  publishEntity(mqtt_client, topic, discovery_topic, device_id, device_mac, GENERAL_ENTITIES, 11, false, 12, 3);
+  publishEntity(mqtt_client, topic, discovery_topic, device_id, device_mac, GENERAL_ENTITIES, 13, false, 14, 3);
 }
 
 void publishChannelEntities(PubSubClient &mqtt_client, String &topic, String &discovery_topic, String &device_id, String &device_mac) {

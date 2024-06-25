@@ -5,9 +5,9 @@
 
 #include <Arduino.h>
 
-#define VERSION 5
-#define FIRMWARE_VERSION "0.683"
-#define HARDWARE_VERSION "0.10"
+#define VERSION 7
+#define FIRMWARE_VERSION "0.70"
+#define HARDWARE_VERSION "0.50"
 #define BRAND_NAME "eMeter"
 #define CLASSIC 0
 #define LITE 1
@@ -66,6 +66,7 @@ struct BoardConfig {
     char ssid[SSID_LEN] = {0}; 
     char password[PASSW_LEN] = {0};
 
+    float counter_t0;
     float counter_t1;
     float counter_t2;
 
