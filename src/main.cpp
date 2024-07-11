@@ -644,7 +644,7 @@ void loop() {
 
   // statistic
 #define STAT_ENABLE 1
-  if((WiFi.status() == WL_CONNECTED)) {
+  if((WiFi.status() == WL_CONNECTED) && (data.conf.stat_period > 0)) {
     if (STAT_ENABLE && data.conf.stat_period && millis() - statisticTimer >= data.conf.stat_period * PERIOD_SEC) {
       statisticTimer = millis();
 
