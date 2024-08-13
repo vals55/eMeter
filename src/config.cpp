@@ -58,8 +58,7 @@ bool loadConfig(BoardConfig &conf) {
             rlog_i("info", "static_ip=%s", IPAddress(conf.ip).toString());
             rlog_i("info", "gateway=%s", IPAddress(conf.gateway).toString());
             rlog_i("info", "mask=%s", IPAddress(conf.mask).toString());
-        }
-        else {
+        } else {
             rlog_i("info", "DHCP is on");
         }
 
@@ -72,8 +71,7 @@ bool loadConfig(BoardConfig &conf) {
         rlog_i("info", "wifi_channel=%d", conf.wifi_channel);
 
         return true;
-    }
-    else {
+    } else {
         // Конфигурация не была сохранена в EEPROM, инициализируем с нуля
 
         rlog_i("info", "ESP config CRC failed. Maybe first run. Init configuration.");

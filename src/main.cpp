@@ -626,7 +626,7 @@ void loop() {
   
   // storage mqtt
   if((WiFi.status() == WL_CONNECTED)) {
-    if (MQTT_ENABLE && millis() - storageTimer >= progressDelay + 1 * PERIOD_MIN) {
+    if (MQTT_ENABLE && data.conf.mqtt_period && millis() - storageTimer >= progressDelay + 1 * PERIOD_MIN) {
       storageTimer = millis();
 
       if(isMQTT(data.conf) && (WiFi.status() == WL_CONNECTED)) {
@@ -644,7 +644,7 @@ void loop() {
 
   // statistic
 #define STAT_ENABLE 1
-  if((WiFi.status() == WL_CONNECTED) && (data.conf.stat_period > 0)) {
+  if((WiFi.status() == WL_CONNECTED) && data.conf.stat_period) {
     if (STAT_ENABLE && data.conf.stat_period && millis() - statisticTimer >= data.conf.stat_period * PERIOD_SEC) {
       statisticTimer = millis();
 
