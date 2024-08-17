@@ -106,6 +106,7 @@ time_t last_call;
 uint32_t last_imp1;
 uint32_t last_imp2;
 uint8_t setup_state;    // init in reconnect()
+uint32_t start;
 
 bool updateConfig(String &topic, String &payload) {
   bool updated = false;
@@ -474,6 +475,13 @@ void setup() {
   Serial.println();
   rlog_i("info", "Boot ok");
   
+  success = testConfig(data.conf);
+  rlog_i("info", "testConfig = %d", success);
+  if (!success) {
+    rlog_i("info", "Setup board entering");
+    setupBoard();
+  }
+
   success = loadConfig(data.conf);
   rlog_i("info", "loadConfig = %d", success);
   if (!success) {
@@ -502,7 +510,10 @@ void setup() {
 
   success = syncTime(data.conf);
   rlog_i("info", "sync_ntp_time = %d", success);
-  
+  if (success) {
+    start = time(nullptr);
+  }
+
   if (data.offset.energy1 == 0) {
     recalcTariff1(data.conf.counter_t1);
   }
@@ -701,6 +712,10 @@ void loop() {
     }
     secTimer = millis();
 #endif
+//сторож конфигурации
+    if (!testConfig(data.conf)) {
+        ESP.restart();
+    }
   }
-  delay(100);
+//  delay(100);
 }

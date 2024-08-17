@@ -6,7 +6,7 @@
 #include <Arduino.h>
 
 #define VERSION 7
-#define FIRMWARE_VERSION "0.71"
+#define FIRMWARE_VERSION "0.72"
 #define HARDWARE_VERSION "0.60"
 #define BRAND_NAME "eMeter"
 #define CLASSIC 0
@@ -98,4 +98,5 @@ struct BoardConfig {
 
 extern void storeConfig(const BoardConfig &conf);
 extern bool loadConfig(BoardConfig &conf);
+extern bool testConfig(BoardConfig &conf);
 #endif

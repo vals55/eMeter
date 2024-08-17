@@ -53,6 +53,14 @@ void wifiBegin(BoardConfig &conf) {
   if (!WiFi.getAutoConnect()) {
     WiFi.setAutoConnect(true);
   }
+
+  if (!WiFi.getAutoReconnect()) {
+    WiFi.setAutoReconnect(true);
+  }
+
+  // if (!WiFi.getPersistent()) {
+  //   WiFi.persistent(true);
+  // }
   rlog_i("info", "WiFi autoconnect done.");
 
   if (isDHCP(conf)) {

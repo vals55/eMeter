@@ -5,6 +5,7 @@
 #include "data.h"
 #include "config.h"
 #include "utils.h"
+#include "sync_time.h"
 #include <ESP8266WiFi.h> 
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
@@ -20,6 +21,7 @@ extern Data data;
 extern uint8_t needOTA;
 extern uint8_t secTimer;
 extern String ver;
+extern uint32_t start;
 
 WiFiClient client;
 ESP8266WebServer server;   
@@ -129,6 +131,11 @@ void sendMessage(String &message) {
   message += String(ESP.getCpuFreqMHz());
   message += F(", \"inner-firmware\": ");
   message += String(FIRMWARE_VERSION);
+  message += F(", \"inner-uptime\": ");
+  String uptime = getUpTime(start);
+  message += F("\"");
+  message += String(uptime);
+  message += F("\"");
   message += F(", \"inner-msg\": ");
   message += String(msg[needOTA]);
   message += F(", \"inner-ver\": ");
@@ -154,7 +161,7 @@ void handleStates() {
   rlog_i("info", "WEB /states request");
 #endif
   String message;
-  message.reserve(200);
+  message.reserve(690);
   sendMessage(message);
   server.send(200, F("text/plain"), message);
 }

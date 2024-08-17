@@ -8,5 +8,6 @@
 bool syncTime(BoardConfig &conf);
 String getCurrentTime();
 String getLocalTime();
+String getUpTime(uint32_t &start);
 #endif
 
