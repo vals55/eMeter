@@ -194,6 +194,18 @@ void handleLoad() {
   needOTA = OTA_UPDATE_START;
 }
 
+void handleReset() {
+
+  rlog_i("info", "WEB /reset request");
+  ESP.restart();
+}
+
+void handleReboot() {
+
+  rlog_i("info", "WEB /reboot request");
+  ESP.restart();
+}
+
 bool startWeb() {
 
   rlog_i("info", "WEB start");
@@ -201,6 +213,8 @@ bool startWeb() {
   server.on("/states", handleStates);
   server.on("/update", handleUpdate);
   server.on("/load", handleLoad);
+  server.on("/reset", handleReset);
+  server.on("/reboot", handleReboot);
   server.begin();
   return true;
 }

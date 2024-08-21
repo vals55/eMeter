@@ -27,7 +27,7 @@ uint16_t getCRC(const BoardConfig &conf) {
 				crc >>= 1;
 		}
 	}
-	rlog_i("info", "get_checksum crc=%x", crc);
+	rlog_i("info", "getCRC crc=%x", crc);
 	return crc;
 }
 
@@ -45,6 +45,10 @@ bool isStat(const BoardConfig &conf) {
 #else
 	return false;
 #endif
+}
+
+bool isNTP(const BoardConfig &conf) {
+	return conf.ntp_server[0];
 }
 
 bool isHA(const BoardConfig &conf) {

@@ -18,6 +18,7 @@ inline void strncpy0(char *dest, const char *src, const size_t len) {
 uint16_t getCRC(const BoardConfig &conf);
 bool isMQTT(const BoardConfig &conf);
 bool isStat(const BoardConfig &conf);
+bool isNTP(const BoardConfig &conf);
 bool isHA(const BoardConfig &conf);
 bool isDHCP(const BoardConfig &conf);
 String getDeviceName();

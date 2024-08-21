@@ -40,14 +40,17 @@ const char HTTP_BODY_MAIN[] PROGMEM = "</head>"
 "</div></body></html>";
 const char HTTP_SCRIPT_UPDATE[] PROGMEM = "<script>"
 "function upd(){const xhr=new XMLHttpRequest();xhr.open('GET','/load');xhr.send()}"
+"function reset(){const xhr=new XMLHttpRequest();xhr.open('GET','/reset');xhr.send()}"
+"function reboot(){const xhr=new XMLHttpRequest();xhr.open('GET','/reboot');xhr.send()}"
 "</script>";
 const char HTTP_STYLE_UPDATE[] PROGMEM = "<style>"
-".update{background:#f0f8ff;padding:10px;text-align:center;display:block }.button{cursor:pointer;border:0;background-color:#9303a7;color:#fff;margin-top:20px;line-height:2rem;font-size:1.2rem;border-radius:1rem;width:60% }button:active{opacity:50% !important;cursor:wait;transition-delay:0s}button:hover{background-color:#C038D3;}"
+".txt{font-size:.8em;color:#f0f8ff;}.update{background:#f0f8ff;padding:10px;text-align:center;display:block }.button{cursor:pointer;border:0;background-color:#9303a7;color:#fff;margin-top:20px;line-height:2rem;font-size:1.2rem;border-radius:1rem;width:60% }button:active{opacity:50% !important;cursor:wait;transition-delay:0s}button:hover{background-color:#C038D3;}"
 ".loader{display:inline-block;border:3px solid #fff;border-top:3px solid #C038D3;border-radius:50%;width:40px;height:40px;margin-top:18px;animation: rotate 2s linear infinite;}.msg{display: block;}"
 "</style>";
 const char HTTP_BODY_UPDATE[] PROGMEM = ""
 "<body class='b'><div class='wrap'><div class='logo-cont'><div class='logo-img'><svg class='pic' fill='none' height='34' viewBox='0 0 34 34' width='34' xmlns='http://www.w3.org/2000/svg'><circle stroke='dodgerblue' stroke-width='4' r='15.0' cx='17.0' cy='17.0'></circle><rect fill='lightcoral' x='14' y='14' height='6' width='15' ry='3' transform='rotate(-40 17 17)'></svg></div><p class='logo-text'>eMeter</p></div><div id='upd' class='update'>"
 "<div><span id='msg'></span><span id='ver'></span></div><div><div id='loader' class='loader'></div></div><button id='btn-upd' class='button'>Назад</button>"
+"<div><a href='#' id='id_reboot' class='txt' onClick='reboot();'>reboot</a><a href='#' id='id_reset' class='txt' onClick='reset();'>reset</a></div>"
 "</div></div></body></html>";
 
 #endif

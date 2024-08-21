@@ -88,7 +88,7 @@ DynamicJsonDocument json_data(JSON_BUFFER);
 
 volatile uint32_t debounce1 = 0;
 IRAM_ATTR void count1() {
-  if (millis() - debounce1 >= 100 && digitalRead(CNT1_PIN)) {
+  if (millis() - debounce1 >= 100 && !digitalRead(CNT1_PIN)) {
     debounce1 = millis();
     imp1++;
   }
@@ -96,7 +96,7 @@ IRAM_ATTR void count1() {
 
 volatile uint32_t debounce2 = 0;
 IRAM_ATTR void count2() {
-  if (millis() - debounce2 >= 100 && digitalRead(CNT2_PIN)) {
+  if (millis() - debounce2 >= 100 && !digitalRead(CNT2_PIN)) {
     debounce2 = millis();
     imp2++;
   }
@@ -106,7 +106,7 @@ time_t last_call;
 uint32_t last_imp1;
 uint32_t last_imp2;
 uint8_t setup_state;    // init in reconnect()
-uint32_t start;
+uint32_t start = 0;
 
 bool updateConfig(String &topic, String &payload) {
   bool updated = false;
@@ -168,7 +168,7 @@ bool updateConfig(String &topic, String &payload) {
     }
     if (param.equals(F("constant"))) {
       constant = payload.toInt();
-      if (constant != data.conf.coeff) {
+      if (constant != (int)data.conf.coeff) {
         if (constant == 0) {
           data.conf.coeff = DEFAULT_COEFF;
           updated = true;
@@ -467,21 +467,15 @@ void setup() {
   digitalWrite(SETUP_LED, LOW);
 
   pinMode (CNT1_PIN, INPUT_PULLUP);
-  attachInterrupt(CNT1_PIN, count1, FALLING);
+  attachInterrupt(CNT1_PIN, count1, CHANGE);
   pinMode (CNT2_PIN, INPUT_PULLUP);
-  attachInterrupt(CNT2_PIN, count2, FALLING);
+  attachInterrupt(CNT2_PIN, count2, CHANGE);
 
   Serial.begin(115200);
   Serial.println();
   rlog_i("info", "Boot ok");
+  rlog_i("info", "BoardConfig size: %d", sizeof(BoardConfig));
   
-  success = testConfig(data.conf);
-  rlog_i("info", "testConfig = %d", success);
-  if (!success) {
-    rlog_i("info", "Setup board entering");
-    setupBoard();
-  }
-
   success = loadConfig(data.conf);
   rlog_i("info", "loadConfig = %d", success);
   if (!success) {
@@ -508,12 +502,14 @@ void setup() {
   // wm.erase();
 #endif
 
-  success = syncTime(data.conf);
-  rlog_i("info", "sync_ntp_time = %d", success);
-  if (success) {
-    start = time(nullptr);
+  if(success && isNTP(data.conf)) {
+    success = syncTime(data.conf);
+    rlog_i("info", "sync_ntp_time = %d", success);
+    if (success) {
+      start = time(nullptr);
+    }
   }
-
+  
   if (data.offset.energy1 == 0) {
     recalcTariff1(data.conf.counter_t1);
   }
@@ -562,6 +558,16 @@ void loop() {
   #ifndef WEB_DISABLE
     handleWeb();
   #endif
+
+    if(start == 0) {
+      if (WiFi.getMode() == WIFI_STA && isNTP(data.conf)) {
+        success = syncTime(data.conf);
+        rlog_i("info", "LOOP sync_ntp_time = %d mode=%d", success, WiFi.getMode());
+        if (success) {
+          start = time(nullptr);
+        }
+      }
+    }
 
   #define MQTT_ENABLE 1
   

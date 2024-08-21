@@ -10,7 +10,7 @@
 #include "porting.h"
 
 bool testConfig(BoardConfig &conf) {
-    rlog_i("info", "Loading Config...");
+    rlog_i("info", "Test Config...");
     
     uint16_t crc = 0;
     BoardConfig tmp_conf = {};
@@ -104,7 +104,7 @@ bool loadConfig(BoardConfig &conf) {
         String discovery_topic(HA_DISCOVERY_TOPIC);
         strncpy0(conf.mqtt_discovery_topic, discovery_topic.c_str(), discovery_topic.length() + 1);
 
-        strncpy0(conf.ntp_server, DEFAULT_NTP_SERVER, sizeof(DEFAULT_NTP_SERVER));
+        strncpy0(conf.ntp_server, DEFAULT_NTP_SERVER, sizeof(DEFAULT_NTP_SERVER) + 1);
         conf.tz = DEFAULT_TZ;
         
         conf.ip = 0;
@@ -118,6 +118,13 @@ bool loadConfig(BoardConfig &conf) {
         conf.wifi_phy_mode = 0;
         conf.wifi_bssid[0] = 0;
         conf.coeff = DEFAULT_COEFF;
+
+        rlog_i("info", "DEFAULT ntp_server=%s", conf.ntp_server);
+        rlog_i("info", "DEFAULT tz=%d", conf.tz);
+        rlog_i("info", "DEFAULT topic=%s", conf.mqtt_topic);
+        rlog_i("info", "DEFAULT port=%d", conf.mqtt_port);
+        rlog_i("info", "DEFAULT auto_discovery=%d", conf.mqtt_auto_discovery);
+        rlog_i("info", "DEFAULT discovery_topic=%d", conf.mqtt_discovery_topic);
 // Можно задать константы при компиляции, чтобы eMeter сразу заработал
 
 #ifdef MQTT_HOST
