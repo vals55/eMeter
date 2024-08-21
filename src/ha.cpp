@@ -114,7 +114,7 @@ String buildEntity( const char *mqtt_topic,
     entity[F("cmd_t")] = command_topic;
     entity[F("cmd_tpl")] = F("{{value | round(2) | float}}");
     entity[F("mode")] = F("box");
-    entity[F("min")] = 0;
+    entity[F("min")] = -9999999.99;
     entity[F("max")] = 9999999.99;
     entity[F("step")] = 0.01;
 
