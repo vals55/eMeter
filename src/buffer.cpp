@@ -6,7 +6,7 @@
 #include "rlog.h"
 
 template<class T>
-EEPROMBuff<T>::EEPROMBuff(const uint16_t _blocks, const uint16_t _start_addr) : blocks(_blocks), start_addr(_start_addr), activeBlock(0) {
+EEPROMBuff<T>::EEPROMBuff(const uint16_t _blocks, const uint16_t _start_addr) : start_addr(_start_addr), activeBlock(0), blocks(_blocks)  {
     uint16_t crc = 0;
     elementSize = sizeof(T);
     crc_addr = start_addr + elementSize * blocks + 1;
@@ -14,7 +14,7 @@ EEPROMBuff<T>::EEPROMBuff(const uint16_t _blocks, const uint16_t _start_addr) : 
     T tmp;
     EEPROM.begin(4096);
     for (int i = 0; i < blocks; i++) {
-        crc = EEPROM.get(crc_addr, crc);
+        crc = EEPROM.get(crc_addr + i * sizeof(crc), crc);
         if (crc > 0) {
             EEPROM.end();
             activeBlock = i;
@@ -44,6 +44,7 @@ void EEPROMBuff<T>::add(const T &element) {
     activeBlock = (activeBlock < blocks - 1) ? activeBlock + 1 : 0;
 
     uint16_t crc = getCRC(element);
+
     EEPROM.begin(4096);
     EEPROM.put(start_addr + activeBlock * elementSize, element);
     EEPROM.put(crc_addr + prev * sizeof(crc), 0);
@@ -66,6 +67,7 @@ bool EEPROMBuff<T>::get_block(const uint16_t block, T &element) {
     EEPROM.get(start_addr + block * elementSize, tmp);
     EEPROM.get(crc_addr + block * sizeof(crc), crc);
     uint16_t calc = getCRC(tmp);
+
     if (calc == crc) {
         element = tmp;
         return true;

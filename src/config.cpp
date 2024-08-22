@@ -8,92 +8,41 @@
 #include "rlog.h"
 #include "utils.h"
 #include "porting.h"
+#include "buffer.h"
+
+extern EEPROMBuff<BoardConfig> storage;
 
 bool testConfig(BoardConfig &conf) {
     rlog_i("info", "Test Config...");
     
-    uint16_t crc = 0;
-    BoardConfig tmp_conf = {};
-    EEPROM.begin(sizeof(tmp_conf) + sizeof(crc));
-    EEPROM.get(0, tmp_conf);
-    EEPROM.get(sizeof(tmp_conf), crc);
-    EEPROM.end();
-
-    uint16_t calculated_crc = getCRC(tmp_conf);
-    
-    return (crc == calculated_crc);
+    BoardConfig test;
+    return storage.get(test);
 }
 
 void storeConfig(const BoardConfig &conf) {
-    uint16_t crc = getCRC(conf);
-    EEPROM.begin(sizeof(conf) + sizeof(crc));
-    EEPROM.put(0, conf);
-    EEPROM.put(sizeof(conf), crc);
 
-    if (!EEPROM.commit()) {
-        rlog_i("info", "Config store FAILED");
-    } 
-    else {
-        rlog_i("info", "Config store OK crc=%x", crc);
-    }
-    EEPROM.end();
+    storage.add(conf);
 }
 
 bool loadConfig(BoardConfig &conf) {
     rlog_i("info", "Loading Config...");
     
-    uint16_t crc = 0;
-    BoardConfig tmp_conf = {};
-    EEPROM.begin(sizeof(tmp_conf) + sizeof(crc)); //  от 4 до 4096 байт. с адреса 0x7b000.
-    EEPROM.get(0, tmp_conf);
-    EEPROM.get(sizeof(tmp_conf), crc);
-    EEPROM.end();
+    if (storage.get(conf)) {
 
-    uint16_t calculated_crc = getCRC(tmp_conf);
-    if (crc == calculated_crc) {
-        conf = tmp_conf;
-        rlog_i("info", "Configuration CRC ok");
-
+        rlog_i("info", "EEPROM restore config");
         conf.mqtt_host[MQTT_HOST_LEN - 1] = 0;
         conf.mqtt_login[MQTT_LOGIN_LEN - 1] = 0;
         conf.mqtt_password[MQTT_PASSWORD_LEN - 1] = 0;
         conf.mqtt_topic[MQTT_TOPIC_LEN - 1] = 0;
         conf.mqtt_discovery_topic[MQTT_TOPIC_LEN - 1] = 0;
+        conf.stat_host[STAT_HOST_LEN - 1] = 0;
         conf.ntp_server[NTP_HOST_LEN - 1] = 0;
-
-        rlog_i("info", "--- MQTT ---- ");
-        rlog_i("info", "host=%s  port=%d", conf.mqtt_host, conf.mqtt_port);
-        rlog_i("info", "login=%s  pass=%s", conf.mqtt_login, conf.mqtt_password);
-        rlog_i("info", "auto discovery=%d", conf.mqtt_auto_discovery);
-        rlog_i("info", "discovery topic=%s", conf.mqtt_discovery_topic);
-
-        rlog_i("info", "--- Network ---- ");
-        if (conf.ip) {
-            rlog_i("info", "DHCP turn off");
-            rlog_i("info", "static_ip=%s", IPAddress(conf.ip).toString());
-            rlog_i("info", "gateway=%s", IPAddress(conf.gateway).toString());
-            rlog_i("info", "mask=%s", IPAddress(conf.mask).toString());
-        } else {
-            rlog_i("info", "DHCP is on");
-        }
-
-        rlog_i("info", "ntp_server=%s", conf.ntp_server);
-        rlog_i("info", "tz=%d", conf.tz);
-
-        rlog_i("info", "--- WIFI ---- ");
-        rlog_i("info", "ssid=%s", conf.ssid);
-        rlog_i("info", "password=%s", conf.password);
-        rlog_i("info", "wifi_channel=%d", conf.wifi_channel);
-
         return true;
     } else {
         // Конфигурация не была сохранена в EEPROM, инициализируем с нуля
-
-        rlog_i("info", "ESP config CRC failed. Maybe first run. Init configuration.");
-        rlog_i("info", "Saved crc=%x  calculated=%x", crc, calculated_crc);
+        rlog_i("info", "EEPROM NEW config");
 
         conf.version = VERSION;
-        rlog_i("info", "cfg version=%d", conf.version);
         conf.counter_t1 = 0;
         conf.counter_t2 = 0;
         String default_topic = String(MQTT_DEFAULT_TOPIC_PREFIX) + "/" + String(getChipId()) + "/";
@@ -118,13 +67,6 @@ bool loadConfig(BoardConfig &conf) {
         conf.wifi_phy_mode = 0;
         conf.wifi_bssid[0] = 0;
         conf.coeff = DEFAULT_COEFF;
-
-        rlog_i("info", "DEFAULT ntp_server=%s", conf.ntp_server);
-        rlog_i("info", "DEFAULT tz=%d", conf.tz);
-        rlog_i("info", "DEFAULT topic=%s", conf.mqtt_topic);
-        rlog_i("info", "DEFAULT port=%d", conf.mqtt_port);
-        rlog_i("info", "DEFAULT auto_discovery=%d", conf.mqtt_auto_discovery);
-        rlog_i("info", "DEFAULT discovery_topic=%d", conf.mqtt_discovery_topic);
 // Можно задать константы при компиляции, чтобы eMeter сразу заработал
 
 #ifdef MQTT_HOST
@@ -149,5 +91,6 @@ bool loadConfig(BoardConfig &conf) {
 #endif
         return false;
     }
+
 }
 

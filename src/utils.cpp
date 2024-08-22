@@ -18,16 +18,14 @@ uint16_t getCRC(const BoardConfig &conf) {
 	for (i = 0; i < len; i++) {
 		crc ^= buf[i];
 		for (uint8_t j = 0; j < 8; j++) {
-			if (crc & 0x01)
-			{
+			if (crc & 0x01) {
 				crc >>= 1;
 				crc ^= poly;
-			}
-			else
+			} else {
 				crc >>= 1;
+			}
 		}
 	}
-	rlog_i("info", "getCRC crc=%x", crc);
 	return crc;
 }
 

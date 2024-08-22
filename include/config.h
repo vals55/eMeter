@@ -6,7 +6,7 @@
 #include <Arduino.h>
 
 #define VERSION 7
-#define FIRMWARE_VERSION "0.80"
+#define FIRMWARE_VERSION "0.90"
 #define HARDWARE_VERSION "0.60"
 #define BRAND_NAME "eMeter"
 #define CLASSIC 0
@@ -15,7 +15,7 @@
 
 #define SSID_LEN 32
 #define PASSW_LEN 64
-#define MQTT_HOST_LEN 64
+#define MQTT_HOST_LEN 44    //64 хватило бы и 15 для ip адреса, делаем элемент буфера не более 512 вместе с crc
 #define MQTT_LOGIN_LEN 32
 #define MQTT_PASSWORD_LEN 32
 #define MQTT_TOPIC_LEN 64

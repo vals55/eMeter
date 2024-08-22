@@ -17,6 +17,7 @@
 #include "http.h"
 #include "mqtt.h"
 #include "ha.h"
+#include "buffer.h"
 
 #if defined(ESP32)
     #error "Software Serial is not supported on the ESP32"
@@ -107,6 +108,7 @@ uint32_t last_imp1;
 uint32_t last_imp2;
 uint8_t setup_state;    // init in reconnect()
 uint32_t start = 0;
+EEPROMBuff<BoardConfig> storage(8);   //4096 / (508+2) = 8 4К должно хватить на нечастые перезаписи
 
 bool updateConfig(String &topic, String &payload) {
   bool updated = false;
