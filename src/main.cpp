@@ -89,7 +89,7 @@ DynamicJsonDocument json_data(JSON_BUFFER);
 
 volatile uint32_t debounce1 = 0;
 IRAM_ATTR void count1() {
-  if (millis() - debounce1 >= 200 && !digitalRead(CNT1_PIN)) {
+  if (millis() - debounce1 >= 400 && !digitalRead(CNT1_PIN)) {
     debounce1 = millis();
     imp1++;
   }
@@ -97,7 +97,7 @@ IRAM_ATTR void count1() {
 
 volatile uint32_t debounce2 = 0;
 IRAM_ATTR void count2() {
-  if (millis() - debounce2 >= 200 && !digitalRead(CNT2_PIN)) {
+  if (millis() - debounce2 >= 400 && !digitalRead(CNT2_PIN)) {
     debounce2 = millis();
     imp2++;
   }
@@ -119,6 +119,7 @@ bool updateConfig(String &topic, String &payload) {
     setup_state--;
   }
 
+  rlog_i("info", "MQTT CALLBACK: setup_state = %d", setup_state);
   if (topic.endsWith(F("/set")) && !setup_state) {
     int endslash = topic.lastIndexOf('/');
     int prevslash = topic.lastIndexOf('/', endslash - 1);
@@ -196,8 +197,10 @@ bool updateConfig(String &topic, String &payload) {
      }
   } else if (topic.endsWith(F(STORAGE_T0))) {
     energy = payload.toFloat();
-    if (isnan(energy) && setup_state) {
+//    if (isnan(energy) && setup_state) {
+    if (setup_state) {
       data.offset.energy0 = energy;
+//      updated = true;
       rlog_i("info", "MQTT CALLBACK: get STORAGE value and SET to T0 energy: %f",  energy);
     }
   } else if (topic.endsWith(F(STORAGE_CONSTANT))) {
@@ -252,7 +255,7 @@ bool reconnect() {
       rlog_i("info", "MQTT Connected. progress delay = %d", progressDelay);
       mqttClient.subscribe(subscribe_topic.c_str(), MQTT_QOS);
       rlog_i("info", "MQTT subscribed to: %s", subscribe_topic.c_str());
-      setup_state = 6;
+      setup_state = 9;
       return true;
     } else {
       rlog_i("info", "MQTT client connect failed with state %d", mqttClient.state());
@@ -367,7 +370,7 @@ void getData() {
   data.data.voltage = isnan(voltage) ? 0.0 : voltage;
   data.data.current = isnan(current) ? 0.0 : current;
   data.data.power = isnan(power) ? 0.0 : power;
-  data.data.energy = isnan(energy) ? 0.0 : energy;
+  data.data.energy = isnan(energy) ? 0.0 : energy + data.offset.energy0;
   data.data.frequency = isnan(frequency) ? 0.0 : frequency;
   data.data.pf = (pf == 0.0f || isnan(pf)) ? 1.0 : pf;
 #endif
@@ -375,7 +378,7 @@ void getData() {
   // rlog_i("measurment", "Voltage: %f", data.data.voltage);
   // rlog_i("measurment", "Current: %f", data.data.current);
   // rlog_i("measurment", "Power: %f", data.data.power);
-  // rlog_i("measurment", "Energy: %f", data.data.energy);
+  // rlog_i("measurment", "Energy: %f Offset: %f", data.data.energy, data.offset.energy0);
   // rlog_i("measurment", "Freq: %f", data.data.frequency);
   // rlog_i("measurment", "pf: %f", data.data.pf);
 

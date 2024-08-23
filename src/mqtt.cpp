@@ -3,7 +3,7 @@
 #include "mqtt.h"
 
 void publish_chunked(PubSubClient &mqtt_client, String &topic, String &payload, unsigned int chunk_size) {
-  rlog_i("info", "MQTT: Publish free memory: %d payload len: %d topic: %s", ESP.getFreeHeap(), payload.length(), MQTT_DEFAULT_TOPIC_PREFIX);
+  rlog_i("info", "MQTT: Publish chunked free memory: %d payload len: %d topic: %s", ESP.getFreeHeap(), payload.length(), MQTT_DEFAULT_TOPIC_PREFIX);
 
   unsigned int len = payload.length();
   const uint8_t *buf = (const uint8_t *)payload.c_str();
@@ -32,7 +32,7 @@ void publish_chunked(PubSubClient &mqtt_client, String &topic, String &payload, 
 }
 
 void publish_big(PubSubClient &mqtt_client, String &topic, String &payload) {
-  rlog_i("info", "MQTT: Publish free memory: %d payload len: %d topic: %s", ESP.getFreeHeap(), payload.length(), MQTT_DEFAULT_TOPIC_PREFIX);
+  rlog_i("info", "MQTT: Publish big free memory: %d payload len: %d topic: %s", ESP.getFreeHeap(), payload.length(), MQTT_DEFAULT_TOPIC_PREFIX);
 
   unsigned int len = payload.length();
   if (mqtt_client.beginPublish(topic.c_str(), len, true)) {
@@ -48,7 +48,7 @@ void publish_big(PubSubClient &mqtt_client, String &topic, String &payload) {
 }
 
 void publish_simple(PubSubClient &mqtt_client, String &topic, String &payload) {
-  rlog_i("info", "MQTT: Publish free memory: %d payload len: %d topic: %s", ESP.getFreeHeap(), payload.length(), MQTT_DEFAULT_TOPIC_PREFIX);
+  rlog_i("info", "MQTT: Publish simple free memory: %d payload len: %d topic: %s", ESP.getFreeHeap(), payload.length(), MQTT_DEFAULT_TOPIC_PREFIX);
 
   if (mqtt_client.connected()) {
     if (mqtt_client.publish(topic.c_str(), payload.c_str(), true)) {
