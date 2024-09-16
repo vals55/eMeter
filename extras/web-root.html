@@ -157,6 +157,7 @@ h1{
       <div>memory: <span id='heap'></span>Kbyte</div>
       <div>RSSI: <span id='rssi'></span> dBm</div>
       <div><a href='/update'>firmware</a>: <span id='firmware'></span></div>
+      <div>uptime: <span id='uptime'></span></div>
     </div>
   </div>
   <div class='tbl'>
@@ -239,16 +240,9 @@ h1{
       <p class='f' id='minpf'></p>
     </div>
   </div>
-  <div class='tbl'>
-    <span class='cnt'>Показания счетчика электроэнергии Т1:</span>
-    <span class='cnt' id='energy1'></span>
-    <span class='cnt'>кВт-ч</span>
-  </div>
-  <div class='tbl'>
-    <span class='cnt'>Показания счетчика электроэнергии Т2:</span>
-    <span class='cnt' id='energy2'></span>
-    <span class='cnt'>кВт-ч</span>
-  </div>
+  <div class='tbl'><span class='cnt'>Измеренное значение электроэнергии:</span><span id='energy0' class='cnt'></span><span class='cnt'>кВт-ч</span></div>
+  <div class='tbl'><span class='cnt'>Расчетное значение электроэнергии Т1:</span><span id='energy1' class='cnt'></span><span class='cnt'>кВт-ч</span></div>
+  <div class='tbl'><span class='cnt'>Расчетное значение электроэнергии Т2:</span><span id='energy2' class='cnt'></span><span class='cnt'>кВт-ч</span></div>
   <div style='padding-top:40px;' class='canvas'><canvas id='mycanvas' width='500' height='200'></canvas></div>
   <script>
     (function() {
