@@ -87,20 +87,20 @@ PZEM004Tv30 pzem(pzemSWSerial);
 
 DynamicJsonDocument json_data(JSON_BUFFER);
 
-volatile uint32_t debounce1 = 0;
+// volatile uint32_t debounce1 = 0;
 IRAM_ATTR void count1() {
-  if (millis() - debounce1 >= 400 && !digitalRead(CNT1_PIN)) {
-    debounce1 = millis();
+  // if (millis() - debounce1 >= 400 && !digitalRead(CNT1_PIN)) {
+  //   debounce1 = millis();
     imp1++;
-  }
+  // }
 }
 
-volatile uint32_t debounce2 = 0;
+// volatile uint32_t debounce2 = 0;
 IRAM_ATTR void count2() {
-  if (millis() - debounce2 >= 400 && !digitalRead(CNT2_PIN)) {
-    debounce2 = millis();
+  // if (millis() - debounce2 >= 400 && !digitalRead(CNT2_PIN)) {
+  //   debounce2 = millis();
     imp2++;
-  }
+  // }
 }
 
 time_t last_call;
@@ -472,9 +472,9 @@ void setup() {
   digitalWrite(SETUP_LED, LOW);
 
   pinMode (CNT1_PIN, INPUT_PULLUP);
-  attachInterrupt(CNT1_PIN, count1, CHANGE);
+  attachInterrupt(CNT1_PIN, count1, RISING);
   pinMode (CNT2_PIN, INPUT_PULLUP);
-  attachInterrupt(CNT2_PIN, count2, CHANGE);
+  attachInterrupt(CNT2_PIN, count2, RISING);
 
   Serial.begin(115200);
   Serial.println();
@@ -723,10 +723,10 @@ void loop() {
     }
     secTimer = millis();
 #endif
-//сторож конфигурации
-    if (!testConfig(data.conf)) {
-        ESP.restart();
-    }
+// //сторож конфигурации
+//     if (!testConfig(data.conf)) {
+//         ESP.restart();
+//     }
   }
-//  delay(100);
+  delay(50);
 }

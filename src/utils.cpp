@@ -13,7 +13,7 @@ uint16_t getCRC(const BoardConfig &conf) {
 	uint8_t *buf = (uint8_t *)&conf;
 	uint16_t crc = 0xffff, poly = 0xa001;
 	uint16_t i = 0;
-	uint16_t len = sizeof(conf);	// - 2;
+	uint16_t len = sizeof(conf);
 
 	for (i = 0; i < len; i++) {
 		crc ^= buf[i];
