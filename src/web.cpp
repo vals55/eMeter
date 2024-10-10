@@ -33,6 +33,9 @@ const char* msg[]  = {
   "\"Обновление загружено. Перезагрузка.\"",
   "\"Ошибка обновления.\""
 };
+char heap[10];
+uint32_t bytes;
+float kBytes;
 
 void updateStarted() {
   rlog_i("info", "CALLBACK: HTTP update process started");
@@ -94,7 +97,7 @@ void sendMessage(String &message) {
   message += F(", \"inner-power\": ");
   message += String(data.data.power);
   message += F(", \"inner-energy0\": ");
-  message += String(data.data.energy+data.offset.energy0);
+  message += String(data.data.energy);          //+data.offset.energy0);
   message += F(", \"inner-frequency\": ");
   message += String(data.data.frequency);
   message += F(", \"inner-pf\": ");
@@ -125,9 +128,13 @@ void sendMessage(String &message) {
   message += String(data.ext.minpf);
   message += F(", \"inner-rssi\": ");
   message += String(WiFi.RSSI());
-  message += F(", \"inner-heap\": ");
-  message += String(ESP.getFreeHeap()>>10);
-  message += F(", \"inner-freq\": ");
+  message += F(", \"inner-heap\": \"");
+  // message += String(ESP.getFreeHeap()>>10);
+  bytes = ESP.getFreeHeap();
+  kBytes = bytes / 1000.0f;
+  sprintf(heap, "%.03f", kBytes);
+  message += heap;
+  message += F("\", \"inner-freq\": ");
   message += String(ESP.getCpuFreqMHz());
   message += F(", \"inner-firmware\": ");
   message += String(FIRMWARE_VERSION);
