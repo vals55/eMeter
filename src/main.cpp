@@ -499,10 +499,10 @@ void setup() {
 #ifdef WIFI_DEBUG_INFO
   rlog_i("info", "WiFi debug info enabled");
   char heap[10];
-  uint32_t bytes = 29200; //ESP.getFreeHeap();
-  float kBytes = bytes / 1000.0f; //ESP.getFreeHeap();
-  sprintf(heap, "%.03f", kBytes);
-  rlog_i("info", "ESP free heap = %s", heap);
+  uint32_t bytes = ESP.getFreeHeap();
+  float KiB = bytes / 1024.0f;
+  sprintf(heap, "%.03f", KiB);
+  rlog_i("info", "ESP free heap = %s KiB", heap);
   
   // wm.setDebugOutput(true);
   // wm.debugPlatformInfo();
