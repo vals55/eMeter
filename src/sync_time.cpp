@@ -47,9 +47,8 @@ String getLocalTime() {
   return String(buf);
 }
 
-String getUpTime(uint32_t &start) {
+void getUpTime(uint32_t &start, char* buf) {
   
-  char buf[100];
   uint32_t uptime = time(nullptr);
   uint32_t sec = uptime - start;
   uint32_t min = sec / 60UL;
@@ -60,5 +59,4 @@ String getUpTime(uint32_t &start) {
   uint8_t hh = hour % 24;
 
   sprintf(buf,"%d days %02d:%02d:%02d", day, hh, mi, ss);
-  return buf;
 }

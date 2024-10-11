@@ -13,10 +13,6 @@
 
 #define STOP_STATE_DEBUG
 
-// extern Measurements data;
-// extern Extra ext;
-// extern Calculations calc;
-// extern Offset offset;
 extern Data data;
 extern uint8_t needOTA;
 extern uint8_t secTimer;
@@ -36,6 +32,7 @@ const char* msg[]  = {
 char heap[10];
 uint32_t bytes;
 float kBytes;
+char uptime[20];
 
 void updateStarted() {
   rlog_i("info", "CALLBACK: HTTP update process started");
@@ -128,20 +125,21 @@ void sendMessage(String &message) {
   message += String(data.ext.minpf);
   message += F(", \"inner-rssi\": ");
   message += String(WiFi.RSSI());
-  message += F(", \"inner-heap\": \"");
-  // message += String(ESP.getFreeHeap()>>10);
+  message += F(", \"inner-heap\": ");
   bytes = ESP.getFreeHeap();
   kBytes = bytes / 1000.0f;
   sprintf(heap, "%.03f", kBytes);
+  message += F("\"");
   message += heap;
-  message += F("\", \"inner-freq\": ");
+  message += F("\"");
+  message += F(", \"inner-freq\": ");
   message += String(ESP.getCpuFreqMHz());
   message += F(", \"inner-firmware\": ");
   message += String(FIRMWARE_VERSION);
   message += F(", \"inner-uptime\": ");
-  String uptime = getUpTime(start);
+  getUpTime(start, uptime);
   message += F("\"");
-  message += String(uptime);
+  message += uptime;
   message += F("\"");
   message += F(", \"inner-msg\": ");
   message += String(msg[needOTA]);
