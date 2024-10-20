@@ -424,9 +424,11 @@ void getData() {
 }
 
 #ifndef WEB_DISABLE
+
+WiFiClient http;
+
 uint8_t isFirmwareReady() {
   
-  WiFiClient http;
   String ret;
   int ind_md5;
 
@@ -442,8 +444,9 @@ uint8_t isFirmwareReady() {
     ind_md5 = ret.indexOf("md5:");
     ver = ret.substring(ret.indexOf("firmware:") + 9, ind_md5);
     ret = ret.substring(ind_md5 + 4);
+    http.flush();
+    http.stop();
   }
-  http.stop();
   
   rlog_i("info", "OTA ver=%s md5=%s", ver, ret.c_str());
   if(ret == "-1") {
