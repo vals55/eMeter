@@ -468,8 +468,9 @@ uint8_t isFirmwareReady() {
 }
 #endif  
 
+bool success = false;
+
 void setup() {
-  bool success = false;
   
   pinMode(SETUP_LED, OUTPUT);
   digitalWrite(SETUP_LED, LOW);
@@ -561,7 +562,7 @@ uint32_t secTimer = 0;
 uint32_t lastReconnectAttempt = 0;
 
 void loop() {
-  bool success = false;
+//  bool success = false;
 
   #ifndef OTA_DISABLE
   ArduinoOTA.handle();
