@@ -38,7 +38,7 @@
   #include <ArduinoOTA.h>
 #endif
 
-// #define WEB_DISABLE
+//#define WEB_DISABLE
 #ifndef WEB_DISABLE
   #include "web.h"
 #endif
@@ -231,6 +231,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   updateConfig(mTopic, mPayload);
   rlog_i("info", "MQTT CALLBACK: Message payload: %s", mPayload.c_str());
+  mPayload.clear();
 }
 
 uint32_t progressDelay = 0;
@@ -542,7 +543,7 @@ void setup() {
   
   #ifndef WEB_DISABLE
     needOTA = isFirmwareReady();
-    webActive = startWeb();
+    // webActive = startWeb();
   #endif
 }
 
@@ -728,10 +729,6 @@ void loop() {
     }
     secTimer = millis();
 #endif
-// //сторож конфигурации
-//     if (!testConfig(data.conf)) {
-//         ESP.restart();
-//     }
   }
   delay(50);
 }

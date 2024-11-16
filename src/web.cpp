@@ -10,6 +10,7 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
+#include "buffer.h"
 
 #define STOP_STATE_DEBUG
 
@@ -18,6 +19,7 @@ extern uint8_t needOTA;
 extern uint8_t secTimer;
 extern String ver;
 extern uint32_t start;
+extern EEPROMBuff<BoardConfig> storage;
 
 WiFiClient client;
 ESP8266WebServer server;   
@@ -169,6 +171,7 @@ void handleStates() {
   message.reserve(690);
   sendMessage(message);
   server.send(200, F("text/plain"), message);
+  message.clear();
 }
 
 void handleRoot() {
@@ -202,6 +205,7 @@ void handleLoad() {
 void handleReset() {
 
   rlog_i("info", "WEB /reset request");
+  storage.erase();
   ESP.restart();
 }
 

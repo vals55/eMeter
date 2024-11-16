@@ -75,6 +75,7 @@ public:
         options += "</option>";
 
         setCustomHtml(options.c_str());
+        options.clear();
     }
     uint8_t getValue() {
         return String(WiFiManagerParameter::getValue()).toInt();

@@ -36,6 +36,9 @@ void wifiInfo() {
 }
 
 void startAP(BoardConfig &conf) {
+
+wm.WiFiManagerInit();
+
 #ifdef WIFI_DEBUG_INFO
   rlog_i("info", "WiFi debug info enabled");
   wm.setDebugOutput(true);
@@ -52,7 +55,7 @@ void startAP(BoardConfig &conf) {
   // std::vector<const char *> menu = {"wifi","info","param","sep","restart","exit"};
   std::vector<const char *> menu = {};
   wm.setMenu(menu);
-
+  
   if (conf.ssid[0]) {
       struct station_config sconf;
       sconf.bssid_set = 0;
