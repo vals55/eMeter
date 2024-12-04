@@ -11,6 +11,7 @@
 #define JSON_SMALL_BUFFER 256
 
 extern void getJSONData(const Data &data, DynamicJsonDocument &json_data);
+extern void getJSONState(const Data &data, DynamicJsonDocument &json_state);
 
 #endif
 

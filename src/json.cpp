@@ -6,6 +6,24 @@
 #include "sync_time.h"
 #include "porting.h"
 
+extern uint8_t needOTA;
+extern String ver;
+extern uint32_t start;
+
+const char* msg[]  = {
+  "Обновления не найдены.", 
+  "Обновление не требуется.",
+  "Есть новое обновление v. ",
+  "Установка обновления...",
+  "Обновление загружено. Перезагрузка.",
+  "Ошибка обновления."
+};
+
+char heap[10];
+uint32_t bytes;
+float kBytes;
+char uptime[20];
+
 void getJSONData(const Data &data, DynamicJsonDocument &json_data) {
 
   JsonObject root = json_data.to<JsonObject>();
@@ -48,4 +66,47 @@ void getJSONData(const Data &data, DynamicJsonDocument &json_data) {
 
   root[F("mqtt_period")] = data.conf.mqtt_period;
   root[F("stat_period")] = data.conf.stat_period;
+}  
+
+void getJSONState(const Data &data, DynamicJsonDocument &json_state) {
+
+  JsonObject root = json_state.to<JsonObject>();
+
+  root[F("inner-voltage")]   = String(data.data.voltage, 1);
+  root[F("inner-current")]   = String(data.data.current, 1);
+  root[F("inner-power")]     = String(data.data.power, 1);
+  root[F("inner-frequency")] = String(data.data.frequency, 1);
+  root[F("inner-energy0")]   = String(data.data.energy, 1);
+  root[F("inner-pf")]        = String(data.data.pf);
+  root[F("inner-energy1")]   = String(data.calc.energy1+data.offset.energy1, 1);
+  root[F("inner-energy2")]   = String(data.calc.energy2+data.offset.energy2, 1);
+
+  root[F("inner-maxvoltage")] = String(data.ext.maxvoltage, 1);
+  root[F("inner-maxcurrent")] = String(data.ext.maxcurrent, 1);
+  root[F("inner-maxpower")]   = String(data.ext.maxpower, 1);
+  root[F("inner-maxfreq")]    = String(data.ext.maxfreq, 1);
+  root[F("inner-maxpf")]      = String(data.ext.maxpf);
+  root[F("inner-minvoltage")] = String(data.ext.minvoltage, 1);
+  root[F("inner-mincurrent")] = String(data.ext.mincurrent, 1);
+  root[F("inner-minpower")]   = String(data.ext.minpower, 1);
+  root[F("inner-minfreq")]    = String(data.ext.minfreq, 1);
+  root[F("inner-minpf")]      = String(data.ext.minpf);
+  root[F("inner-rssi")]       = WiFi.RSSI();
+  
+  bytes = ESP.getFreeHeap();
+  kBytes = bytes / 1000.0f;
+  sprintf(heap, "%.03f", kBytes);
+  root[F("inner-heap")]       = heap;
+
+  root[F("inner-freq")]       = ESP.getCpuFreqMHz();
+  root[F("inner-firmware")]   = FIRMWARE_VERSION;
+  
+  getUpTime(start, uptime);
+  root[F("inner-uptime")]     = uptime;
+  
+  root[F("inner-msg")]        = msg[needOTA];
+  root[F("inner-ver")]        = needOTA == OTA_UPDATE_READY ? ver : "";
+  root[F("style-loader")]     = needOTA > 2 ? "display:inline-block" : "display:none";
+  root[F("oncli-btn-upd")]    = needOTA > 1 ? "upd();" : "history.back();";
+  root[F("inner-btn-upd")]    = needOTA > 1 ? "Обновить" : "Назад";
 }  
