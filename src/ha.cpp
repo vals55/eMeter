@@ -122,7 +122,6 @@ String buildEntity( const char *mqtt_topic,
     entity[F("retain")] = true;
     entity[F("qos")] = 1;
   }
-  
 
   rlog_i("info", "MQTT: DISCOVERY SENSOR: JSON Mem usage: %d", json_doc.memoryUsage());
   rlog_i("info", "MQTT: DISCOVERY SENSOR: JSON size: %d", measureJson(json_doc));
@@ -216,25 +215,18 @@ void publishEntity(PubSubClient &mqtt_client, String &topic, String &discovery_t
 }
 
 void publishGeneralEntities(PubSubClient &mqtt_client, String &topic, String &discovery_topic, String &device_id, String &device_mac) {
-  // добавляем одиночные сенсоры из массива GENERAL_ENTITIES с индекса 0 ("Voltage") до 9 ("RSSI")
-  // всего 10 сенсоров без атрибутов
+  // добавляем одиночные сенсоры из массива GENERAL_ENTITIES с индекса 0 ("Voltage") по 12 вкл., до 13 ("RSSI")
+  // всего 13 сенсоров без атрибутов
   bool extended = false;
-  // 2024-01-03 vals до 10 - Energy
-  // for (int i = 0; i < 10; i++) {
-  // 2024-06-25 vals до 12
-  // for (int i = 0; i < 10; i++) {
   for (int i = 0; i < 13; i++) {
     extended = i == 0; // в первый сенсор дописываем всю информацию про устройство
     publishEntity(mqtt_client, topic, discovery_topic, device_id, device_mac, GENERAL_ENTITIES, i, extended);
   }
-  // основной сенсор 10 ("RSSI") атрибуты 11,12,13 (ip, mac, chip)
-  // 2024-01-03 vals до 10 - Energy
-  // publishEntity(mqtt_client, topic, discovery_topic, device_id, device_mac, GENERAL_ENTITIES, 10, false, 11, 3);
+  // основной сенсор 13 ("RSSI") атрибуты 14,15,16 (ip, mac, chip)
   publishEntity(mqtt_client, topic, discovery_topic, device_id, device_mac, GENERAL_ENTITIES, 13, false, 14, 3);
 }
 
 void publishChannelEntities(PubSubClient &mqtt_client, String &topic, String &discovery_topic, String &device_id, String &device_mac) {
-  // tring channel_name = "";
   for (int channel = 0; channel < CHANNEL_COUNT; channel++) {
     // один сенсор из массива CHANNEL_ENTITIES с индексом 0 ("total") будет основным
     // остальные его атрибутами с 1 по индекс 3
@@ -246,7 +238,6 @@ void publishHA(PubSubClient &mqtt_client, String &topic, String &discovery_topic
   
   rlog_i("info", "MQTT: Publishing HA topic");
   unsigned long start_time = millis();
-//  String discovery_topic = data.conf.mqtt_discovery_topic;
   String device_id = String(getChipId());
   String device_mac = getMacAddressHex();
 

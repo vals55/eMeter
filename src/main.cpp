@@ -54,19 +54,9 @@
 #define BTN_HOLD_SETUP 5000
 #define BTN_CLICK 200
 
-// #define UNDEFINED 0
-// #define JUST_SUBSCRIBED 1
-// #define SUBSCRIBED
-
 void getData();
 bool recalcTariff1(float energy);
 bool recalcTariff2(float energy);
-
-// BoardConfig conf;
-// Measurements data;
-// Extra ext;
-// Offset offset;
-// Calculations calc;
 
 Data data;
 
@@ -106,7 +96,7 @@ IRAM_ATTR void count2() {
 time_t last_call;
 uint32_t last_imp1;
 uint32_t last_imp2;
-uint8_t setup_state;    // init in reconnect()
+uint8_t setup_state;                  // init in reconnect()
 uint32_t start = 0;
 EEPROMBuff<BoardConfig> storage(8);   //4096 / (508+2) = 8 4К должно хватить на нечастые перезаписи
 
@@ -346,8 +336,6 @@ void setupBoard() {
 
 void getData() {
   
-  // String curr_time = getCurrentTime();
-  
   float voltage = pzem.voltage();
   float current = pzem.current();
   float power = pzem.power();
@@ -375,13 +363,6 @@ void getData() {
   data.data.frequency = isnan(frequency) ? 0.0 : frequency;
   data.data.pf = (pf == 0.0f || isnan(pf)) ? 1.0 : pf;
 #endif
-  // rlog_i("measurment", "Address: %04x", pzem.readAddress());
-  // rlog_i("measurment", "Voltage: %f", data.data.voltage);
-  // rlog_i("measurment", "Current: %f", data.data.current);
-  // rlog_i("measurment", "Power: %f", data.data.power);
-  // rlog_i("measurment", "Energy: %f Offset: %f", data.data.energy, data.offset.energy0);
-  // rlog_i("measurment", "Freq: %f", data.data.frequency);
-  // rlog_i("measurment", "pf: %f", data.data.pf);
 
   calcExtraData(data.data, data.ext);
   

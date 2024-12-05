@@ -52,7 +52,6 @@ wm.WiFiManagerInit();
 #ifdef CALLBACK_NEED
   wm.setWebServerCallback(bindServerCallback);
 #endif  
-  // std::vector<const char *> menu = {"wifi","info","param","sep","restart","exit"};
   std::vector<const char *> menu = {};
   wm.setMenu(menu);
   
@@ -174,10 +173,6 @@ wm.WiFiManagerInit();
 
   bool result = wm.startConfigPortal(getAppName().c_str());
   
-  // if (!result) {
-  //   return;
-  // }
-
 #ifdef WIFI_DEBUG_INFO
    wifiInfo();
 #endif  
