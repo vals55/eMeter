@@ -83,11 +83,13 @@ void handleStates() {
 #endif
   getJSONState(data, json_state);
   String message = "";
+  message.reserve(JSON_BUFFER);
   serializeJson(json_state, message);
 #ifndef STOP_STATE_DEBUG
   rlog_i("web", "WEB message %s", message.c_str());
 #endif  
 server.send(200, F("text/plain"), message);
+message.clear();
 }
 
 void handleRoot() {
