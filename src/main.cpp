@@ -343,7 +343,7 @@ void getData() {
   float frequency = pzem.frequency();
   float pf = pzem.pf();
 
-  if (power > 9999.9f) {
+  if (energy > 9999.9f) {
     pzem.resetEnergy();
   }
 
@@ -356,7 +356,10 @@ void getData() {
   data.data.frequency = isnan(frequency) ? 0.0 : round(frequency * 10)/10;
   data.data.pf = (pf == 0.0f || isnan(pf)) ? 1.0 : round(pf * 100)/100;
 #else
-  data.data.voltage = isnan(voltage) ? 0.0 : voltage;
+  if(isnan(voltage)) {
+    voltage = data.data.voltage;
+  }
+  data.data.voltage = voltage;
   data.data.current = isnan(current) ? 0.0 : current;
   data.data.power = isnan(power) ? 0.0 : power;
   data.data.energy = isnan(energy) ? 0.0 : energy + data.offset.energy0;
