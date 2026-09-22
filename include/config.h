@@ -6,7 +6,7 @@
 #include <Arduino.h>
 
 #define VERSION 7
-#define FIRMWARE_VERSION "1.52"
+#define FIRMWARE_VERSION "2.01"
 #define HARDWARE_VERSION "0.70"
 #define BRAND_NAME "eMeter"
 #define CLASSIC 0
@@ -44,7 +44,7 @@
 //time
 #define PERIOD_SEC 1000
 #define PERIOD_MIN 60 * 1000
-#define PERIOD_MEASUREMENT 1 * 1000
+#define PERIOD_MEASUREMENT 30 * 1000
 #define PERIOD_CHECK_STATE 1 * 1000
 #define PERIOD_CHECK_OTA 24 * 3600 * 1000
 

@@ -38,7 +38,7 @@
   #include <ArduinoOTA.h>
 #endif
 
-//#define WEB_DISABLE
+#define WEB_DISABLE
 #ifndef WEB_DISABLE
   #include "web.h"
 #endif
@@ -66,31 +66,33 @@ PubSubClient mqttClient(espClient);
 volatile uint32_t imp1;
 volatile uint32_t imp2;
 
-#ifndef WEB_DISABLE
+//#ifndef WEB_DISABLE 
 uint8_t needOTA = OTA_UPDATE_THE_SAME;
 bool webActive = false;
 String ver;
-#endif
+//#endif
 
 SoftwareSerial pzemSWSerial(PZEM_RX_PIN, PZEM_TX_PIN);
 PZEM004Tv30 pzem(pzemSWSerial);
 
 DynamicJsonDocument json_data(JSON_BUFFER);
 
-// volatile uint32_t debounce1 = 0;
+// === последние опрошенные значения PZEM вынесены наружу getData(), ===
+// === чтобы сохранять их между вызовами (PZEM теперь опрашивается не каждый ===
+// === вызов getData(), а по отдельному таймеру PZEM_PERIOD). ===
+float g_pzem_voltage = NAN;
+float g_pzem_current = NAN;
+float g_pzem_power = NAN;
+float g_pzem_energy = NAN;
+float g_pzem_frequency = NAN;
+float g_pzem_pf = NAN;
+
 IRAM_ATTR void count1() {
-  // if (millis() - debounce1 >= 400 && !digitalRead(CNT1_PIN)) {
-  //   debounce1 = millis();
     imp1++;
-  // }
 }
 
-// volatile uint32_t debounce2 = 0;
 IRAM_ATTR void count2() {
-  // if (millis() - debounce2 >= 400 && !digitalRead(CNT2_PIN)) {
-  //   debounce2 = millis();
     imp2++;
-  // }
 }
 
 time_t last_call;
@@ -334,48 +336,69 @@ void setupBoard() {
   ESP.restart();
 }
 
-void getData() {
-  
-  float voltage = pzem.voltage();
-  float current = pzem.current();
-  float power = pzem.power();
-  float energy = pzem.energy();
-  float frequency = pzem.frequency();
-  float pf = pzem.pf();
+// === отдельный таймер опроса PZEM — раз в PZEM_PERIOD (по умолчанию ===
+// === 15 сек = 4 раза/мин), а не при каждом вызове getData(). getData() ===
+// === по-прежнему может вызываться каждую секунду (PERIOD_MEASUREMENT) — ===
+// === это не создаёт лишней нагрузки, т.к. Modbus-транзакция к PZEM теперь ===
+// === реально выполняется только раз в PZEM_PERIOD. ===
+uint32_t pzemTimer = 0;
+constexpr uint32_t PZEM_PERIOD = 15UL * 1000UL; // 15 сек = 4 раза/мин; поставьте 30UL*1000UL для 2 раз/мин
 
-  if (energy > 9999.9f) {
-    pzem.resetEnergy();
-  }
+void getData() {
+
+  // Опрос PZEM — только раз в PZEM_PERIOD (см. таймер выше).
+  if (millis() - pzemTimer >= PZEM_PERIOD) {
+    pzemTimer = millis();
+
+    g_pzem_voltage = pzem.voltage();
+    g_pzem_current = pzem.current();
+    g_pzem_power = pzem.power();
+    g_pzem_energy = pzem.energy();
+    g_pzem_frequency = pzem.frequency();
+    g_pzem_pf = pzem.pf();
+
+    if (g_pzem_energy > 9999.9f) {
+      pzem.resetEnergy();
+    }
 
 #define NOT_ROUND_DATA
 #ifdef ROUND_DATA
-  data.data.voltage = isnan(voltage) ? 0.0 : round(voltage * 10)/10;
-  data.data.current = isnan(current) ? 0.0 : round(current * 10)/10;
-  data.data.power = isnan(power) ? 0.0 : round(power * 10)/10;
-  data.data.energy = isnan(energy) ? 0.0 : round(energy * 100)/100;
-  data.data.frequency = isnan(frequency) ? 0.0 : round(frequency * 10)/10;
-  data.data.pf = (pf == 0.0f || isnan(pf)) ? 1.0 : round(pf * 100)/100;
+    data.data.voltage = isnan(g_pzem_voltage) ? 0.0 : round(g_pzem_voltage * 10)/10;
+    data.data.current = isnan(g_pzem_current) ? 0.0 : round(g_pzem_current * 10)/10;
+    data.data.power = isnan(g_pzem_power) ? 0.0 : round(g_pzem_power * 10)/10;
+    data.data.energy = isnan(g_pzem_energy) ? 0.0 : round(g_pzem_energy * 100)/100;
+    data.data.frequency = isnan(g_pzem_frequency) ? 0.0 : round(g_pzem_frequency * 10)/10;
+    data.data.pf = (g_pzem_pf == 0.0f || isnan(g_pzem_pf)) ? 1.0 : round(g_pzem_pf * 100)/100;
 #else
-  if(isnan(voltage)) {
-    voltage = data.data.voltage;
-  }
-  data.data.voltage = voltage;
-  data.data.current = isnan(current) ? 0.0 : current;
-  data.data.power = isnan(power) ? 0.0 : power;
-  data.data.energy = isnan(energy) ? 0.0 : energy + data.offset.energy0;
-  data.data.frequency = isnan(frequency) ? 0.0 : frequency;
-  data.data.pf = (pf == 0.0f || isnan(pf)) ? 1.0 : pf;
+    if (isnan(g_pzem_voltage)) {
+      g_pzem_voltage = data.data.voltage;
+    }
+    data.data.voltage = g_pzem_voltage;
+    data.data.current = isnan(g_pzem_current) ? 0.0 : g_pzem_current;
+    data.data.power = isnan(g_pzem_power) ? 0.0 : g_pzem_power;
+    data.data.energy = isnan(g_pzem_energy) ? 0.0 : g_pzem_energy + data.offset.energy0;
+    data.data.frequency = isnan(g_pzem_frequency) ? 0.0 : g_pzem_frequency;
+    data.data.pf = (g_pzem_pf == 0.0f || isnan(g_pzem_pf)) ? 1.0 : g_pzem_pf;
 #endif
 
-  calcExtraData(data.data, data.ext);
-  
+    calcExtraData(data.data, data.ext);
+  }
+
+  // Атомарный снимок imp1/imp2: гарантирует, что все выводимые дальше величины
+  // (energy, power, delta) считаются от одних и тех же значений счётчика,
+  // без гонки с ISR между двумя разными обращениями к imp1/imp2.
+  noInterrupts();
+  uint32_t imp1_snapshot = imp1;
+  uint32_t imp2_snapshot = imp2;
+  interrupts();
+
   float coeff = (float)data.conf.coeff;
   if (!coeff) {
     coeff = 3200.0f;
   }
 
-  data.calc.energy1 = (float)imp1 / coeff;
-  data.calc.energy2 = (float)imp2  / coeff;
+  data.calc.energy1 = (float)imp1_snapshot / coeff;
+  data.calc.energy2 = (float)imp2_snapshot / coeff;
 
   time_t now = time(nullptr);
   long period = now - last_call;
@@ -384,18 +407,18 @@ void getData() {
   }
   last_call = now;
 
-  data.calc.power1 = (float)(imp1 - last_imp1) * 1000.0f * period / coeff;
-  last_imp1 = imp1;
-  data.calc.power2 = (float)(imp2 - last_imp2) * 1000.0f * period / coeff;
-  last_imp2 = imp2;
-  voltage = isnan(voltage) ? 220.0f : voltage;
-  data.calc.voltage = voltage;
-  data.calc.current1 = data.calc.power1 / voltage / data.data.pf;
-  data.calc.current2 = data.calc.power2 / voltage / data.data.pf;
+  data.calc.power1 = (float)(imp1_snapshot - last_imp1) * 1000.0f * period / coeff;
+  last_imp1 = imp1_snapshot;
+  data.calc.power2 = (float)(imp2_snapshot - last_imp2) * 1000.0f * period / coeff;
+  last_imp2 = imp2_snapshot;
+  float voltage_for_calc = isnan(g_pzem_voltage) ? 220.0f : g_pzem_voltage;
+  data.calc.voltage = voltage_for_calc;
+  data.calc.current1 = data.calc.power1 / voltage_for_calc / data.data.pf;
+  data.calc.current2 = data.calc.power2 / voltage_for_calc / data.data.pf;
 
-  rlog_i("measurment", "imp1: %d", imp1);
-  rlog_i("measurment", "imp2: %d", imp2);
-  rlog_i("measurment", "voltage: %f", voltage);
+  rlog_i("measurment", "imp1: %d", imp1_snapshot);
+  rlog_i("measurment", "imp2: %d", imp2_snapshot);
+  rlog_i("measurment", "voltage: %f", voltage_for_calc);
   rlog_i("measurment", "pf: %f", data.data.pf);
   rlog_i("measurment", "energy: %f", data.data.energy);
   rlog_i("measurment", "energy offset: %f", data.offset.energy0);
@@ -448,7 +471,7 @@ uint8_t isFirmwareReady() {
   rlog_i("info", "firmware=%s vs sketch=%s", ret.c_str(), ESP.getSketchMD5().c_str());
   return true;
 }
-#endif  
+#endif  //WEB_DISABLE  
 
 void setup() {
   bool success = false;
@@ -714,5 +737,5 @@ void loop() {
     secTimer = millis();
 #endif
   }
-  delay(50);
+  yield();
 }
