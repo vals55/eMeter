@@ -38,6 +38,11 @@
   #include <ArduinoOTA.h>
 #endif
 
+// === ИЗМЕНЕНО: веб-сервер (и автономная HTTP-загрузка прошивки isFirmwareReady/ ===
+// === startOTA, которая является частью веб-функциональности) исключаются из ===
+// === компиляции директивой препроцессора WEB_DISABLE. Модуль web.h остаётся ===
+// === в проекте, просто не подключается и не компилируется. ArduinoOTA (загрузка ===
+// === из PlatformIO по локальной сети) не зависит от этого флага и работает всегда. ===
 #define WEB_DISABLE
 #ifndef WEB_DISABLE
   #include "web.h"
@@ -55,6 +60,8 @@
 #define BTN_CLICK 200
 
 void getData();
+void pollPZEM();
+void updateFlashLED();
 bool recalcTariff1(float energy);
 bool recalcTariff2(float energy);
 
@@ -66,20 +73,22 @@ PubSubClient mqttClient(espClient);
 volatile uint32_t imp1;
 volatile uint32_t imp2;
 
-//#ifndef WEB_DISABLE 
+// === ИЗМЕНЕНО: needOTA/ver/webActive — часть автономного веб-механизма ===
+// === обновления прошивки, исключаются вместе с веб-сервером под WEB_DISABLE. ===
+#ifndef WEB_DISABLE
 uint8_t needOTA = OTA_UPDATE_THE_SAME;
 bool webActive = false;
 String ver;
-//#endif
+#endif
 
 SoftwareSerial pzemSWSerial(PZEM_RX_PIN, PZEM_TX_PIN);
 PZEM004Tv30 pzem(pzemSWSerial);
 
 DynamicJsonDocument json_data(JSON_BUFFER);
 
-// === последние опрошенные значения PZEM вынесены наружу getData(), ===
-// === чтобы сохранять их между вызовами (PZEM теперь опрашивается не каждый ===
-// === вызов getData(), а по отдельному таймеру PZEM_PERIOD). ===
+// === ИЗМЕНЕНО: последние опрошенные значения PZEM вынесены наружу getData() ===
+// === и pollPZEM(), чтобы сохранять их между вызовами (PZEM теперь опрашивается ===
+// === не по фоновому таймеру, а явно из 3 точек публикации через pollPZEM()). ===
 float g_pzem_voltage = NAN;
 float g_pzem_current = NAN;
 float g_pzem_power = NAN;
@@ -87,12 +96,20 @@ float g_pzem_energy = NAN;
 float g_pzem_frequency = NAN;
 float g_pzem_pf = NAN;
 
+// volatile uint32_t debounce1 = 0;
 IRAM_ATTR void count1() {
+  // if (millis() - debounce1 >= 400 && !digitalRead(CNT1_PIN)) {
+  //   debounce1 = millis();
     imp1++;
+  // }
 }
 
+// volatile uint32_t debounce2 = 0;
 IRAM_ATTR void count2() {
+  // if (millis() - debounce2 >= 400 && !digitalRead(CNT2_PIN)) {
+  //   debounce2 = millis();
     imp2++;
+  // }
 }
 
 time_t last_call;
@@ -305,15 +322,33 @@ bool recalcTariff2(float energy) {
   return false;
 }
 
+// === ИЗМЕНЕНО: flashLED() была блокирующей (delay(5) останавливал loop() на 5мс ===
+// === на каждом вызове, 4 раза за цикл публикаций). Сейчас светодиод ===
+// === включается мгновенно, а выключение отложено на таймер, который ===
+// === нужно опрашивать в loop() вызовом updateFlashLED() — без единого delay(). ===
+volatile bool ledFlashing = false;
+uint32_t ledFlashStart = 0;
+constexpr uint32_t LED_FLASH_DURATION = 5UL; // длительность вспышки в мс, как и была раньше
+
 void flashLED() {
   digitalWrite(SETUP_LED, HIGH);
-  delay(5);
-  digitalWrite(SETUP_LED, LOW);
+  ledFlashStart = millis();
+  ledFlashing = true;
+}
+
+// Вызывается каждую итерацию loop() — гасит светодиод по истечении
+// LED_FLASH_DURATION мс без блокировки остального кода.
+void updateFlashLED() {
+  if (ledFlashing && millis() - ledFlashStart >= LED_FLASH_DURATION) {
+    digitalWrite(SETUP_LED, LOW);
+    ledFlashing = false;
+  }
 }
 
 void setupBoard() {
   
   digitalWrite(SETUP_LED, HIGH);
+  // === ИЗМЕНЕНО: остановка веб-сервера перед входом в AP-режим — под WEB_DISABLE. ===
 #ifndef WEB_DISABLE
     if(webActive) {
       webActive = stopWeb();
@@ -336,53 +371,48 @@ void setupBoard() {
   ESP.restart();
 }
 
-// === отдельный таймер опроса PZEM — раз в PZEM_PERIOD (по умолчанию ===
-// === 15 сек = 4 раза/мин), а не при каждом вызове getData(). getData() ===
-// === по-прежнему может вызываться каждую секунду (PERIOD_MEASUREMENT) — ===
-// === это не создаёт лишней нагрузки, т.к. Modbus-транзакция к PZEM теперь ===
-// === реально выполняется только раз в PZEM_PERIOD. ===
-uint32_t pzemTimer = 0;
-constexpr uint32_t PZEM_PERIOD = 15UL * 1000UL; // 15 сек = 4 раза/мин; поставьте 30UL*1000UL для 2 раз/мин
+// === ИЗМЕНЕНО: фоновый таймер PZEM_PERIOD убран. PZEM теперь опрашивается ===
+// === не по времени, а явно — только непосредственно перед передачей данных, ===
+// === вызовом pollPZEM() из 3 точек публикации (MQTT/storage/HTTP). Это ===
+// === сокращает число Modbus-транзакций (а с ними — окон блокировки прерываний ===
+// === внутри SoftwareSerial) до минимально необходимого, вместо опроса по таймеру. ===
+void pollPZEM() {
 
-void getData() {
+  g_pzem_voltage = pzem.voltage();
+  g_pzem_current = pzem.current();
+  g_pzem_power = pzem.power();
+  g_pzem_energy = pzem.energy();
+  g_pzem_frequency = pzem.frequency();
+  g_pzem_pf = pzem.pf();
 
-  // Опрос PZEM — только раз в PZEM_PERIOD (см. таймер выше).
-  if (millis() - pzemTimer >= PZEM_PERIOD) {
-    pzemTimer = millis();
-
-    g_pzem_voltage = pzem.voltage();
-    g_pzem_current = pzem.current();
-    g_pzem_power = pzem.power();
-    g_pzem_energy = pzem.energy();
-    g_pzem_frequency = pzem.frequency();
-    g_pzem_pf = pzem.pf();
-
-    if (g_pzem_energy > 9999.9f) {
-      pzem.resetEnergy();
-    }
+  if (g_pzem_energy > 9999.9f) {
+    pzem.resetEnergy();
+  }
 
 #define NOT_ROUND_DATA
 #ifdef ROUND_DATA
-    data.data.voltage = isnan(g_pzem_voltage) ? 0.0 : round(g_pzem_voltage * 10)/10;
-    data.data.current = isnan(g_pzem_current) ? 0.0 : round(g_pzem_current * 10)/10;
-    data.data.power = isnan(g_pzem_power) ? 0.0 : round(g_pzem_power * 10)/10;
-    data.data.energy = isnan(g_pzem_energy) ? 0.0 : round(g_pzem_energy * 100)/100;
-    data.data.frequency = isnan(g_pzem_frequency) ? 0.0 : round(g_pzem_frequency * 10)/10;
-    data.data.pf = (g_pzem_pf == 0.0f || isnan(g_pzem_pf)) ? 1.0 : round(g_pzem_pf * 100)/100;
+  data.data.voltage = isnan(g_pzem_voltage) ? 0.0 : round(g_pzem_voltage * 10)/10;
+  data.data.current = isnan(g_pzem_current) ? 0.0 : round(g_pzem_current * 10)/10;
+  data.data.power = isnan(g_pzem_power) ? 0.0 : round(g_pzem_power * 10)/10;
+  data.data.energy = isnan(g_pzem_energy) ? 0.0 : round(g_pzem_energy * 100)/100;
+  data.data.frequency = isnan(g_pzem_frequency) ? 0.0 : round(g_pzem_frequency * 10)/10;
+  data.data.pf = (g_pzem_pf == 0.0f || isnan(g_pzem_pf)) ? 1.0 : round(g_pzem_pf * 100)/100;
 #else
-    if (isnan(g_pzem_voltage)) {
-      g_pzem_voltage = data.data.voltage;
-    }
-    data.data.voltage = g_pzem_voltage;
-    data.data.current = isnan(g_pzem_current) ? 0.0 : g_pzem_current;
-    data.data.power = isnan(g_pzem_power) ? 0.0 : g_pzem_power;
-    data.data.energy = isnan(g_pzem_energy) ? 0.0 : g_pzem_energy + data.offset.energy0;
-    data.data.frequency = isnan(g_pzem_frequency) ? 0.0 : g_pzem_frequency;
-    data.data.pf = (g_pzem_pf == 0.0f || isnan(g_pzem_pf)) ? 1.0 : g_pzem_pf;
+  if (isnan(g_pzem_voltage)) {
+    g_pzem_voltage = data.data.voltage;
+  }
+  data.data.voltage = g_pzem_voltage;
+  data.data.current = isnan(g_pzem_current) ? 0.0 : g_pzem_current;
+  data.data.power = isnan(g_pzem_power) ? 0.0 : g_pzem_power;
+  data.data.energy = isnan(g_pzem_energy) ? 0.0 : g_pzem_energy + data.offset.energy0;
+  data.data.frequency = isnan(g_pzem_frequency) ? 0.0 : g_pzem_frequency;
+  data.data.pf = (g_pzem_pf == 0.0f || isnan(g_pzem_pf)) ? 1.0 : g_pzem_pf;
 #endif
 
-    calcExtraData(data.data, data.ext);
-  }
+  calcExtraData(data.data, data.ext);
+}
+
+void getData() {
 
   // Атомарный снимок imp1/imp2: гарантирует, что все выводимые дальше величины
   // (energy, power, delta) считаются от одних и тех же значений счётчика,
@@ -431,6 +461,8 @@ void getData() {
 
 }
 
+// === ИЗМЕНЕНО: isFirmwareReady() — автономная HTTP-загрузка прошивки, часть ===
+// === веб-функциональности, исключается под WEB_DISABLE вместе с веб-сервером. ===
 #ifndef WEB_DISABLE
 uint8_t isFirmwareReady() {
   
@@ -471,7 +503,7 @@ uint8_t isFirmwareReady() {
   rlog_i("info", "firmware=%s vs sketch=%s", ret.c_str(), ESP.getSketchMD5().c_str());
   return true;
 }
-#endif  //WEB_DISABLE  
+#endif  // WEB_DISABLE
 
 void setup() {
   bool success = false;
@@ -548,6 +580,7 @@ void setup() {
     ArduinoOTA.begin();
   #endif
   
+  // === ИЗМЕНЕНО: первая проверка версии автономной HTTP-прошивки — под WEB_DISABLE. ===
   #ifndef WEB_DISABLE
     needOTA = isFirmwareReady();
     // webActive = startWeb();
@@ -571,8 +604,12 @@ void loop() {
   #ifndef OTA_DISABLE
   ArduinoOTA.handle();
   #endif
+
+  // === ИЗМЕНЕНО: неблокирующий контроль светодиода — гасит его, если время вспышки вышло. ===
+  updateFlashLED();
   
   if((WiFi.status() == WL_CONNECTED)) {
+  // === ИЗМЕНЕНО: handleWeb() — под WEB_DISABLE вместе с веб-сервером. ===
   #ifndef WEB_DISABLE
     handleWeb();
   #endif
@@ -619,6 +656,7 @@ void loop() {
   
   if (!btnState && flag && millis() - btnTimer > BTN_CLICK) {
     btnTimer = millis();
+    // === ИЗМЕНЕНО: переключение веб-сервера по клику — под WEB_DISABLE. ===
 #ifndef WEB_DISABLE
     if(webActive) {
       webActive = stopWeb();
@@ -644,6 +682,8 @@ void loop() {
       rlog_i("info loop >>>>>", "timer MQTT. progress delay = %d", progressDelay);
       
       if(isMQTT(data.conf) && (WiFi.status() == WL_CONNECTED)) {
+        // === ИЗМЕНЕНО: PZEM опрашивается непосредственно перед этой публикацией. ===
+        pollPZEM();
         getData();
         if (reconnect()) {
           getJSONData(data, json_data);
@@ -666,6 +706,8 @@ void loop() {
 
       if(isMQTT(data.conf) && (WiFi.status() == WL_CONNECTED)) {
         rlog_i("info loop >>>>>", "STORAGE timer MQTT. progress delay = %d", progressDelay);
+        // === ИЗМЕНЕНО: PZEM опрашивается непосредственно перед этой публикацией. ===
+        pollPZEM();
         getData();
         if (reconnect()) {
           String topic = data.conf.mqtt_topic;
@@ -685,6 +727,8 @@ void loop() {
 
       if(isStat(data.conf) && (WiFi.status() == WL_CONNECTED)) {
         rlog_i("info loop >>>>>", "timer Statistic");
+        // === ИЗМЕНЕНО: PZEM опрашивается непосредственно перед этой публикацией. ===
+        pollPZEM();
         getData();
         getJSONData(data, json_data);
         sendHTTP(data.conf, json_data);
@@ -694,11 +738,14 @@ void loop() {
   }
 
   // measurement
-  if (millis() - measurementTimer >= PERIOD_MEASUREMENT) {
-    measurementTimer = millis();
-    getData();
-    flashLED();
-  }
+  // === ИЗМЕНЕНО: PZEM здесь больше не опрашивается (нет pollPZEM()) — этот вызов ===
+  // === getData() не связан с передачей данных, поэтому использует последние ===
+  // === закэшированные g_pzem_* без новой Modbus-транзакции к PZEM. ===
+  // if (millis() - measurementTimer >= PERIOD_MEASUREMENT) {
+  //   measurementTimer = millis();
+  //   getData();
+  //   flashLED();
+  // }
   
   // check own state
   if (millis() - stateTimer >= PERIOD_CHECK_STATE) {
@@ -710,6 +757,7 @@ void loop() {
   // OTA check firmware
   if (millis() - otaTimer >= PERIOD_CHECK_OTA) {
     otaTimer = millis();
+    // === ИЗМЕНЕНО: проверка версии автономной HTTP-прошивки — под WEB_DISABLE. ===
 #ifndef WEB_DISABLE
     if(webActive) {
       webActive = stopWeb();
@@ -726,6 +774,7 @@ void loop() {
   
   // OTA processing one sec timer
   if (millis() - secTimer >= 5 * PERIOD_SEC) {
+    // === ИЗМЕНЕНО: применение автономной HTTP-прошивки — под WEB_DISABLE. ===
 #ifndef WEB_DISABLE
     if(needOTA == OTA_UPDATE_FINISH) {
       ESP.restart();
